@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Soutenance Impact Influence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout : console de révision. En-tête collant à onglets, une seule colonne de lecture (~70ch),
+   le chrono comme seul panneau détaché. Les trois bâtiments (Rouge, Bleu, Vert) servent de repères de couleur. */
+:root{
+  --paper:#F2F4F7; --panel:#FFFFFF; --ink:#16202A; --muted:#566271; --line:#D5DCE4; --line-soft:#E6EBF0;
+  --accent:#245FA6; --accent-soft:#E2EBF6; --on-accent:#FFFFFF;
+  --rouge:#B5372B; --bleu:#2763AE; --vert:#2E7A4E;
+  --ok:#2E7A4E; --warn:#9A6200; --bad:#B3261E;
+  --term-bg:#18222D; --term-head:#223040; --term-ink:#DCE6EF; --term-dim:#8796A6; --term-pr:#9CD3A8;
+  --term-rouge:#F19A8E; --term-bleu:#8DB7EE; --term-vert:#8ED3A8;
+  --head-h:0px; --clock-h:0px;
+  --hl:#FBE6A2; --hl-ink:#4E3B00;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --step--1:.84rem; --step-0:1rem; --step-1:1.18rem; --step-2:1.45rem; --step-3:1.9rem; --step-4:2.4rem;
+  --measure:70ch;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#11181F; --panel:#18212B; --ink:#E2E8EE; --muted:#97A3B0; --line:#2B3744; --line-soft:#212C38;
+    --accent:#7DAAE6; --accent-soft:#1C2A3A; --on-accent:#0E1620;
+    --rouge:#EC8A7D; --bleu:#7DAAE6; --vert:#74C495;
+    --ok:#74C495; --warn:#E3B45B; --bad:#F28B82;
+    --term-bg:#0B1117; --term-head:#16212C; --term-ink:#DCE6EF; --term-dim:#7F8E9E; --term-pr:#9CD3A8;
+    --hl:#4A3D10; --hl-ink:#FFE49A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#11181F; --panel:#18212B; --ink:#E2E8EE; --muted:#97A3B0; --line:#2B3744; --line-soft:#212C38;
+  --accent:#7DAAE6; --accent-soft:#1C2A3A; --on-accent:#0E1620;
+  --rouge:#EC8A7D; --bleu:#7DAAE6; --vert:#74C495;
+  --ok:#74C495; --warn:#E3B45B; --bad:#F28B82;
+  --term-bg:#0B1117; --term-head:#16212C; --term-ink:#DCE6EF; --term-dim:#7F8E9E; --term-pr:#9CD3A8;
+  --hl:#4A3D10; --hl-ink:#FFE49A;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+img{max-width:100%}
+a{color:var(--accent);text-underline-offset:2px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+button{font:inherit;color:inherit}
+code,kbd{font-family:var(--f-mono);font-size:.9em}
+p code,li code,td code,.inline code{background:var(--line-soft);padding:.05em .3em;border-radius:4px;overflow-wrap:anywhere}
+h1,h2,h3,h4{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:var(--step-3);font-weight:700;letter-spacing:-.01em}
+h3{font-size:var(--step-2);font-weight:600;margin-top:2.2rem}
+h4{font-size:var(--step-1);font-weight:600}
+p{margin:0}
+p,li,td{overflow-wrap:break-word}
+.wrap{max-width:62rem;margin:0 auto;padding-inline:20px}
+@media (max-width:480px){.wrap{padding-inline:16px}}
+
+/* ---------- en-tête ---------- */
+.top{background:var(--paper);border-bottom:1px solid var(--line);z-index:10}
+@media (min-width:760px){.top{position:sticky;top:env(safe-area-inset-top,0px)}}
+.top .wrap{padding-block:14px 0}
+.eyebrow{font-family:var(--f-display);font-size:var(--step--1);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.top h1{font-size:var(--step-4);font-weight:700;letter-spacing:-.015em;margin-top:2px}
+.top .meta{color:var(--muted);font-size:var(--step--1);margin-top:2px;display:flex;flex-wrap:wrap;gap:4px 14px}
+.bdots{display:inline-flex;gap:10px;align-items:center}
+.nav{display:flex;gap:2px;margin-top:12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex:none;font-family:var(--f-display);font-weight:600;font-size:1.02rem;letter-spacing:.01em;color:var(--muted);text-decoration:none;padding:8px 12px 10px;border-bottom:3px solid transparent}
+.nav a:hover{color:var(--ink)}
+.nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.nav a.ext{margin-left:auto;color:var(--accent)}
+
+/* ---------- sections ---------- */
+main .wrap{padding-block:28px 64px}
+.tab{scroll-margin-top:calc(env(safe-area-inset-top,0px) + var(--head-h))}
+.tab > h2{margin-bottom:6px}
+.lede{color:var(--muted);font-size:var(--step-1);max-width:var(--measure);margin-bottom:22px}
+.prose{max-width:var(--measure);display:grid;gap:.8rem}
+.small{font-size:var(--step--1);color:var(--muted)}
+.stack{display:grid;gap:14px}
+.stack,.demo,.qa-a,.seg .body,.prose,.level{grid-template-columns:minmax(0,1fr)}
+.mt{margin-top:14px}
+
+/* chips */
+.b{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;letter-spacing:.02em}
+.b::before{content:"";width:.62em;height:.62em;border-radius:50%;background:currentColor}
+.b-rouge{color:var(--rouge)} .b-bleu{color:var(--bleu)} .b-vert{color:var(--vert)}
+.tag{display:inline-block;font-family:var(--f-display);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tag.fix{border-color:var(--accent);color:var(--accent)}
+.tag.n1{border-color:var(--bad);color:var(--bad)}
+.tag.n2{border-color:var(--warn);color:var(--warn)}
+.tag.old{border-color:var(--warn);color:var(--warn)}
+.tag.cur{border-color:var(--ok);color:var(--ok)}
+
+/* paroles, pièges, attendus */
+.say{position:relative;padding-left:1.35em;max-width:var(--measure);font-size:1.03rem}
+.say::before{content:"«";position:absolute;left:0;top:-.08em;font-family:var(--f-display);font-weight:700;font-size:1.5em;line-height:1;color:var(--accent)}
+.say::after{content:"\00a0»";color:var(--accent);font-family:var(--f-display);font-weight:700}
+.say + .say{margin-top:.7rem}
+.note{max-width:var(--measure)}
+.lbl{font-family:var(--f-display);font-weight:600;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;margin-right:.5em}
+.lbl.trap{color:var(--warn)} .lbl.ok{color:var(--ok)} .lbl.fix{color:var(--accent)} .lbl.bad{color:var(--bad)} .lbl.show{color:var(--muted)}
+.fixnote{background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:.94rem;max-width:var(--measure)}
+
+/* terminal */
+.term{background:var(--term-bg);color:var(--term-ink);border-radius:8px;overflow:hidden;max-width:46rem}
+.term-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 8px 6px 12px;background:var(--term-head);font-size:.85rem;color:var(--term-ink)}
+.term-h .dev{font-weight:700}
+.term-h .where{color:var(--term-dim)}
+.term-h .b-rouge{color:var(--term-rouge)} .term-h .b-bleu{color:var(--term-bleu)} .term-h .b-vert{color:var(--term-vert)}
+.copy{margin-left:auto;background:transparent;border:1px solid var(--term-dim);color:var(--term-ink);border-radius:6px;padding:2px 10px;font-size:.8rem;cursor:pointer}
+.copy:hover{border-color:var(--term-ink)}
+.term pre{margin:0;padding:10px 12px 12px;overflow-x:auto}
+.term code{font-family:var(--f-mono);font-size:.9rem;line-height:1.6;display:block;white-space:pre}
+.term .ln{display:block}
+.term .pr{color:var(--term-pr);user-select:none;-webkit-user-select:none;margin-right:.55em}
+.term .cm{color:var(--term-dim)}
+.term.url .pr{color:var(--term-dim)}
+.screen{margin:0;background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;max-width:46rem}
+.screen code{font-family:var(--f-mono);font-size:.84rem;line-height:1.5;white-space:pre;display:block;color:var(--ink)}
+.screen mark{background:var(--hl);color:var(--hl-ink);border-radius:3px;padding:0 2px}
+.cap{font-size:var(--step--1);color:var(--muted);margin-bottom:4px}
+
+/* listes */
+ul.clean{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+ul.dash{margin:0;padding-left:1.1em;display:grid;gap:6px;max-width:var(--measure)}
+ul.dash li::marker{color:var(--muted)}
+ol.steps{margin:0;padding-left:1.4em;display:grid;gap:6px;max-width:var(--measure)}
+
+/* ---------- Jour J ---------- */
+.golden{margin:0 0 6px;font-family:var(--f-display);font-weight:600;font-size:var(--step-2);line-height:1.25;max-width:36ch;text-wrap:balance}
+.golden::before{content:"« ";color:var(--accent)} .golden::after{content:" »";color:var(--accent)}
+.phasebar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:14px 0 10px;max-width:46rem}
+.phasebar span:nth-child(1){flex:15;background:var(--accent)}
+.phasebar span:nth-child(2){flex:10;background:var(--warn)}
+.phasebar span:nth-child(3){flex:5;background:var(--muted)}
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;max-width:58rem}
+@media (max-width:700px){.phases{grid-template-columns:1fr}}
+.phase b{display:block;font-family:var(--f-display);font-size:var(--step-2);line-height:1.1}
+.phase .k{font-family:var(--f-display);font-weight:600;font-size:.82rem;letter-spacing:.07em;text-transform:uppercase}
+.phase:nth-child(1) .k{color:var(--accent)} .phase:nth-child(2) .k{color:var(--warn)} .phase:nth-child(3) .k{color:var(--muted)}
+.phase p{font-size:.95rem;color:var(--muted);margin-top:4px}
+.levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 32px;margin-top:14px}
+@media (max-width:760px){.levels{grid-template-columns:1fr}}
+.level h4{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.level .sub{font-size:.92rem;color:var(--muted);margin:4px 0 10px}
+.level ol{margin:0;padding-left:1.5em;display:grid;gap:6px}
+.level li{min-width:0}
+
+/* tableaux */
+.tbl{overflow-x:auto;max-width:100%;margin-top:8px}
+table{border-collapse:collapse;font-size:.93rem;min-width:100%}
+th,td{text-align:left;padding:7px 12px 7px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-family:var(--f-display);font-weight:600;font-size:.82rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom-color:var(--line)}
+td{font-variant-numeric:tabular-nums}
+td.mono,th.mono{font-family:var(--f-mono);font-size:.86rem;white-space:nowrap}
+.bad-v{color:var(--bad);text-decoration:line-through;text-decoration-thickness:1px}
+.good-v{color:var(--ok);font-weight:700}
+
+/* cases à cocher */
+.check{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;max-width:var(--measure)}
+.check input{appearance:none;-webkit-appearance:none;width:22px;height:22px;margin:1px 0 0;border:2px solid var(--muted);border-radius:5px;background:var(--panel);cursor:pointer;display:grid;place-items:center}
+.check input::after{content:"";width:6px;height:11px;border:solid var(--on-accent);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px);opacity:0}
+.check input:checked{background:var(--ok);border-color:var(--ok)}
+.check input:checked::after{opacity:1}
+.check label{cursor:pointer}
+.check input:checked + label{color:var(--muted)}
+.check .why{display:block;font-size:.88rem;color:var(--muted);margin-top:2px}
+.check .why .tag{margin-right:6px}
+
+/* ---------- chrono ---------- */
+.clock{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--head-h));z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:0 0 12px 12px;padding:12px 16px 10px;display:grid;gap:8px;max-width:46rem;box-shadow:0 6px 16px -12px var(--ink)}
+.clock-row{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap}
+.clock-txt{flex:1 1 14rem;min-width:0;display:grid;gap:2px}
+.digits{font-family:var(--f-mono);font-weight:600;font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+@media (max-width:480px){.digits{font-size:2.1rem}}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.follow{display:inline-flex;align-items:center;gap:6px;font-size:.88rem;color:var(--muted);cursor:pointer}
+.follow input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:700;font-size:.95rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.quiet{border-color:var(--line);font-weight:400;color:var(--muted)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.scale{position:relative;height:34px}
+.scale .track{position:absolute;left:0;right:0;top:6px;height:10px;border-radius:5px;background:linear-gradient(to right,var(--line-soft) 0 50%,transparent 50% 85%,var(--line-soft) 85% 100%);border:1px solid var(--line)}
+.scale .ok-zone{position:absolute;top:6px;height:10px;left:50%;width:35%;background:var(--accent-soft)}
+.scale .fill{position:absolute;left:0;top:6px;height:10px;border-radius:5px 0 0 5px;background:var(--accent);width:0}
+.scale .tick{position:absolute;top:0;height:22px;border-left:1.5px solid var(--muted)}
+.scale .tick span{position:absolute;top:22px;transform:translateX(-50%);font-size:.72rem;color:var(--muted);font-family:var(--f-mono);white-space:nowrap}
+.scale .tick.target{border-left-color:var(--accent)} .scale .tick.target span{color:var(--accent);font-weight:600}
+.status{font-weight:700;font-size:.95rem}
+.status.ok{color:var(--ok)} .status.warn{color:var(--warn)} .status.bad{color:var(--bad)} .status.idle{color:var(--muted);font-weight:400}
+.nowline{font-size:.9rem;color:var(--muted)}
+.nowline b{color:var(--ink)}
+.nowline b{font-family:var(--f-display);font-weight:600}
+.segs{display:grid;gap:0;margin-top:22px}
+.seg{display:grid;grid-template-columns:5.6rem minmax(0,1fr);gap:4px 18px;padding:20px 0;border-top:1px solid var(--line);scroll-margin-top:calc(env(safe-area-inset-top,0px) + var(--head-h) + var(--clock-h) + 8px)}
+@media (max-width:620px){.seg{grid-template-columns:1fr}}
+.seg .when{font-family:var(--f-mono);font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:4px}
+.seg .when b{display:block;font-family:var(--f-display);font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.seg .body{display:grid;gap:10px;min-width:0}
+.seg h3{margin:0;font-size:var(--step-1)}
+.seg.is-now{background:linear-gradient(to right,var(--accent-soft),transparent 70%);margin-inline:-12px;padding-inline:12px;border-radius:0 8px 8px 0}
+.seg.is-now .when,.seg.is-now .when b{color:var(--accent)}
+.seg.is-done h3{color:var(--muted)}
+.adjust{margin-top:26px}
+
+/* ---------- démos ---------- */
+.demo{border-top:1px solid var(--line);padding:24px 0;display:grid;gap:12px}
+.demo-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.demo-h .num{font-family:var(--f-mono);font-weight:600;color:var(--accent)}
+.demo-h h3{margin:0}
+
+/* ---------- jury ---------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.toolbar .sep{flex:1 1 auto}
+.chipbtn{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:.9rem}
+.chipbtn[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.score{font-size:.92rem;color:var(--muted)}
+.qgroup{margin-top:26px}
+.qgroup > h3{margin:0 0 8px;font-size:var(--step-1)}
+.qa{border-top:1px solid var(--line-soft)}
+.qa:last-child{border-bottom:1px solid var(--line-soft)}
+.qa summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1.2rem minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:12px 0}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary::before{content:"+";font-family:var(--f-mono);font-weight:600;color:var(--accent)}
+.qa[open] summary::before{content:"–"}
+.qa-q{font-weight:700}
+.qa .st{font-size:.78rem;font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.qa[data-state="su"] .st::after{content:"Su";color:var(--ok)}
+.qa[data-state="revoir"] .st::after{content:"À revoir";color:var(--warn)}
+.qa-a{padding:0 0 16px 2.2rem;display:grid;gap:10px}
+@media (max-width:520px){.qa-a{padding-left:0}}
+.rate{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.rate button{border:1.5px solid var(--line);background:transparent;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:.9rem}
+.rate button[data-rate="su"][aria-pressed="true"]{border-color:var(--ok);background:var(--ok);color:var(--on-accent)}
+.rate button[data-rate="revoir"][aria-pressed="true"]{border-color:var(--warn);background:var(--warn);color:var(--on-accent)}
+.src{font-size:.82rem;color:var(--muted);margin-left:auto}
+
+/* ---------- checklist ---------- */
+.meter{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.meter .bar{flex:1 1 220px;max-width:30rem;height:10px;border-radius:5px;background:var(--line-soft);border:1px solid var(--line);overflow:hidden}
+.meter .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.meter b{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.cl-group{margin-top:26px}
+.cl-group h3{margin:0 0 10px;font-size:var(--step-1);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.cl-group h3 .count{font-family:var(--f-mono);font-size:.85rem;color:var(--muted);font-weight:400}
+.cl-group.done h3 .count{color:var(--ok)}
+.reset{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ---------- pièges ---------- */
+.lie{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:6px 24px;padding:16px 0;border-top:1px solid var(--line-soft)}
+@media (max-width:700px){.lie{grid-template-columns:1fr}}
+.lie .wrong{color:var(--muted)}
+.lie .wrong q{font-style:italic;quotes:"« " " »";color:var(--ink)}
+.lie .wrong .lbl{display:block;margin-bottom:2px}
+.lie .right .lbl{display:block;margin-bottom:2px}
+.lie .right p + p{margin-top:4px}
+.never{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 28px;max-width:58rem}
+@media (max-width:700px){.never{grid-template-columns:1fr}}
+.never li{list-style:none;display:grid;grid-template-columns:1.2rem minmax(0,1fr);gap:8px}
+.never li::before{content:"✕";color:var(--bad);font-weight:700}
+
+/* ---------- maquette ---------- */
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:14px 22px;max-width:58rem;margin-top:10px}
+.kv div{display:grid}
+.kv b{font-family:var(--f-mono);font-size:var(--step-2);font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kv span{font-size:.88rem;color:var(--muted)}
+.cfg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:10px}
+@media (max-width:900px){.cfg{grid-template-columns:1fr}}
+.cfg > div{min-width:0}
+
+/* ---------- documents ---------- */
+.docs{display:grid;gap:0;margin-top:6px}
+.doc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 20px;padding:14px 0;border-top:1px solid var(--line-soft);align-items:baseline}
+@media (max-width:600px){.doc{grid-template-columns:1fr}}
+.doc h4{font-family:var(--f-body);font-size:1.02rem;font-weight:700;display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.doc p{font-size:.93rem;color:var(--muted);margin-top:2px;max-width:var(--measure)}
+.doc .links{display:flex;gap:8px 14px;flex-wrap:wrap;font-size:.92rem;white-space:nowrap}
+.doc .links .pages{color:var(--muted);font-family:var(--f-mono);font-size:.82rem}
+
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:var(--step--1)}
+footer .wrap{padding-block:18px 28px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Configurez des services réseaux et des équipements d'interconnexion</div>
+    <h1>Soutenance Impact Influence</h1>
+    <div class="meta">
+      <span class="bdots"><span class="b b-rouge">Rouge, siège</span><span class="b b-bleu">Bleu, commercial</span><span class="b b-vert">Vert, technique</span></span>
+      <span>26 équipements · 36 liens · IPv4 et IPv6</span>
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#jour" data-tab="jour">Jour J</a>
+      <a href="#script" data-tab="script">Chrono</a>
+      <a href="#demos" data-tab="demos">Démos</a>
+      <a href="#jury" data-tab="jury">Jury</a>
+      <a href="#checklist" data-tab="checklist">Checklist</a>
+      <a href="#pieges" data-tab="pieges">Pièges</a>
+      <a href="#maquette" data-tab="maquette">Maquette</a>
+      <a href="#documents" data-tab="documents">Documents</a>
+      <a class="ext" href="trajet.html">Trajet de la trame →</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+<!-- =================================================================== JOUR J -->
+<section id="jour" class="tab" aria-labelledby="h-jour">
+  <h2 id="h-jour">Le jour J</h2>
+  <p class="lede">Ce que la grille évalue, dans quel ordre réviser, et ce qu'il faut faire avant d'entrer en salle.</p>
+
+  <p class="golden">Je montre ce que j'annonce. J'annonce seulement ce que je peux montrer. Et je dis moi-même ce qui ne va pas.</p>
+  <p class="small" style="max-width:var(--measure)">La règle d'or. Un candidat qui affirme un blocage qui ne se produit pas perd plus qu'un candidat qui explique calmement pourquoi son test ne fonctionne pas.</p>
+
+  <h3>Les trente minutes</h3>
+  <div class="phasebar" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="phases">
+    <div class="phase"><span class="k">Présentation</span><b>15 min</b><p>10 minimum, 20 maximum : hors de cette fourchette, la présentation peut être refusée. Adressage, six démos, trois préconisations.</p></div>
+    <div class="phase"><span class="k">Discussion</span><b>10 min</b><p>L'évaluateur joue Thibault Charbi, responsable informatique. Il te challenge sur tes choix. Parle-lui comme à un manager : il veut comprendre, pas être impressionné.</p></div>
+    <div class="phase"><span class="k">Débriefing</span><b>5 min</b><p>Hors rôle, non noté. Dis où tu vas : « Ce projet m'a surtout intéressé sur la partie sécurité. C'est la direction que je veux prendre. » Puis pose-lui une question.</p></div>
+  </div>
+
+  <h3>Ce qu'il faut retenir, par ordre d'importance</h3>
+  <p class="small" style="max-width:var(--measure);margin-top:6px">Le niveau 1 fait échouer s'il manque. Le niveau 4 ne change rien à la note. Révise dans cet ordre.</p>
+  <div class="levels">
+    <div class="level">
+      <h4><span class="tag n1">Niveau 1</span> Éliminatoire</h4>
+      <p class="sub">Le jury ne peut pas valider sans.</p>
+      <ol>
+        <li><b>Tenir entre 10 et 20 minutes.</b> Le seul critère où l'on échoue sans erreur technique. Chronomètre-toi deux fois.</li>
+        <li><b>Les six démos fonctionnent à l'écran</b> : routes, VLAN, accès WAN, serveur web, load-balancing, ACL. Chacune est une ligne de la grille.</li>
+        <li><b>Justifier l'adressage.</b> /30 sur les liaisons, /24 en interne, numéro de VLAN dans l'adresse, double pile parce que le FAI fournit l'adresse du site en IPv6.</li>
+        <li><b>Les trois préconisations</b>, chacune avec son risque : risque, mesure, risque traité.</li>
+      </ol>
+    </div>
+    <div class="level">
+      <h4><span class="tag n2">Niveau 2</span> Ce que le jury creuse</h4>
+      <p class="sub">Des choix visibles dans ta configuration : il posera la question.</p>
+      <ol start="5">
+        <li><b>Le NAT statique retiré</b>, et pourquoi. Ton point le plus exposé et ta meilleure réponse.</li>
+        <li><b>La limite du simulateur sur les ACL.</b> Annonce-la toi-même avant qu'on te la découvre.</li>
+        <li><b>Le DHCP sur le Core</b> et non sur les distributions comme demandé.</li>
+        <li><b>OSPF plutôt que des routes statiques</b> : reprise sur panne automatique dans le triangle.</li>
+        <li><b>Aucun VLAN dans le Bleu et le Vert</b> : la séparation y est déjà physique.</li>
+      </ol>
+    </div>
+    <div class="level">
+      <h4><span class="tag">Niveau 3</span> De « validé » à « solide »</h4>
+      <ol start="10">
+        <li>Comment deux VLAN communiquent : interface virtuelle du Core, <code>ip routing</code>.</li>
+        <li>Le trajet complet vers le serveur web : les quatre briques.</li>
+        <li>NAT surchargé et NAT statique : sortie pour les postes, entrée pour le serveur.</li>
+        <li>Pourquoi quatre câbles poseraient problème sans LACP.</li>
+        <li>Ce qui se passe si une distribution tombe : topologie en V.</li>
+        <li>Pourquoi des routes statiques sur le routeur Rouge.</li>
+        <li>Les trois phrases de posture.</li>
+      </ol>
+    </div>
+    <div class="level">
+      <h4><span class="tag">Niveau 4</span> Finesse, à laisser si le temps manque</h4>
+      <ul class="dash">
+        <li>Où l'étiquette 802.1Q apparaît et disparaît</li>
+        <li>DCE, DTE et <code>clock rate</code></li>
+        <li>L'autoconfiguration SLAAC en IPv6</li>
+        <li>Pourquoi les deux distributions sont identiques</li>
+        <li>LACP <code>active</code> contre <code>passive</code></li>
+        <li>Filtrage du port 53, pas blocage de l'hôte</li>
+        <li>Pourquoi deux noms DNS</li>
+        <li>Le rôle exact de l'ACL 1 dans la règle NAT</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Avant d'entrer en salle</h3>
+  <p class="small" style="margin-top:6px">Les cases restent cochées dans ce navigateur.</p>
+  <div class="levels">
+    <div class="level stack">
+      <h4>La veille</h4>
+      <div class="check"><input type="checkbox" id="v1" data-k="v1"><label for="v1">Corriger les trois postes satellites (passerelle et DNS), puis refaire le test de filtrage DNS depuis l'Accueil.<span class="why">Le fichier analysé les avait encore faux. Cinq minutes, et ça débloque ta seule démo de filtrage pleinement fonctionnelle. Valeurs ci-dessous.</span></label></div>
+      <div class="check"><input type="checkbox" id="v2" data-k="v2"><label for="v2"><code>write</code> sur chaque équipement, <b>puis Ctrl+S</b> dans Packet Tracer.<span class="why"><code>write</code> sauvegarde l'équipement, Ctrl+S sauvegarde le fichier. Les deux sont nécessaires.</span></label></div>
+      <div class="check"><input type="checkbox" id="v3" data-k="v3"><label for="v3">Copie de sauvegarde du <code>.pkt</code> avant de répéter les tests de panne.</label></div>
+      <div class="check"><input type="checkbox" id="v4" data-k="v4"><label for="v4">Corriger les diapos 4 et 6 et le kit d'urgence : retirer <code>8.8.8.8</code> et le préfixe <code>www</code>.</label></div>
+      <div class="check"><input type="checkbox" id="v5" data-k="v5"><label for="v5"><code>show vlan brief</code> sur le Core : la ligne <code>99 MANAGEMENT</code> apparaît.<span class="why">Si tu vois <code>VLAN0099</code> : <code>conf t</code>, <code>vlan 99</code>, <code>name MANAGEMENT</code>, <code>end</code>, <code>write</code>.</span></label></div>
+      <div class="check"><input type="checkbox" id="v6" data-k="v6"><label for="v6">Ouvrir le site depuis PC FINANCE, puis <code>show ip nat translations</code> sur le Rouge : une ligne mentionne 192.168.90.80.</label></div>
+      <div class="check"><input type="checkbox" id="v7" data-k="v7"><label for="v7">Après le test depuis PC ACCUEIL, <code>show access-lists</code> sur le Rouge : noter l'affichage du compteur de la ligne <code>deny</code>.</label></div>
+      <div class="check"><input type="checkbox" id="v8" data-k="v8"><label for="v8"><code>show ip route</code> sur le routeur Vert : les réseaux du siège apparaissent en <code>O E2</code>.<span class="why">Décrit d'après le comportement standard de Cisco : à voir une fois sur ton écran.</span></label></div>
+      <div class="check"><input type="checkbox" id="v9" data-k="v9"><label for="v9">Préparer une copie propre de la maquette : sans tes notes de révision, avec les passerelles corrigées.</label></div>
+    </div>
+    <div class="level stack">
+      <h4>Dix minutes avant</h4>
+      <div class="check"><input type="checkbox" id="j1" data-k="j1"><label for="j1">Ouvrir la maquette et vérifier que tout est monté (voyants verts, OSPF à FULL).</label></div>
+      <div class="check"><input type="checkbox" id="j2" data-k="j2"><label for="j2"><code>ipconfig</code> sur PC INFORMATIQUE, FINANCE, RH et DIRECTION : <b>noter les adresses sur papier</b>.<span class="why">Ils sont en DHCP, leur adresse n'est pas fixe. Celle du PC DIRECTION sert au ping depuis RH.</span></label></div>
+      <div class="check"><input type="checkbox" id="j3" data-k="j3"><label for="j3">Ouvrir à l'avance les fenêtres de commande, les navigateurs, ton document de configuration et ton document de préconisations.</label></div>
+      <div class="check"><input type="checkbox" id="j5" data-k="j5"><label for="j5">Pour le partage d'écran : agrandir le texte de la console et fermer tout ce qui ne sert pas.</label></div>
+      <div class="check"><input type="checkbox" id="j4" data-k="j4"><label for="j4">Faire tourner les six démos une fois, dans l'ordre, chronométré.<span class="why">Le premier ping échoue souvent (résolution ARP) : lance chaque test deux fois, ou <code>ping -n 6</code>.</span></label></div>
+    </div>
+  </div>
+
+  <p class="fixnote" style="margin-top:18px"><span class="lbl fix">Ton livrable 1</span>la version initiale du document de configuration a un plan d'adressage incomplet en page 1, une page 4 titrée « Routeur Batiment rouge » qui montre le routeur Vert, et une ancienne configuration du Rouge sans le NAT ni la liste 100. Ta version mise à jour ajoute une section 5 qui documente les corrections. Si le jury tombe sur une ancienne page : « Mon document a été figé avant mes derniers ajustements, la maquette fait foi. »</p>
+
+  <div class="tbl" style="margin-top:18px">
+    <table>
+      <caption class="cap" style="text-align:left">Les trois postes satellites à corriger (Desktop → IP Configuration)</caption>
+      <thead><tr><th>Poste</th><th>Adresse</th><th>Passerelle</th><th>DNS</th></tr></thead>
+      <tbody>
+        <tr><td><span class="b b-bleu">ACCUEIL</span></td><td class="mono">192.168.60.253</td><td class="mono"><span class="bad-v">192.168.70.254</span> → <span class="good-v">192.168.60.254</span></td><td class="mono"><span class="good-v">192.168.100.10</span></td></tr>
+        <tr><td><span class="b b-bleu">SHOWROOM</span></td><td class="mono">192.168.70.253</td><td class="mono"><span class="bad-v">192.168.60.254</span> → <span class="good-v">192.168.70.254</span></td><td class="mono"><span class="good-v">192.168.100.10</span></td></tr>
+        <tr><td><span class="b b-vert">REUNION</span></td><td class="mono">192.168.80.253</td><td class="mono"><span class="bad-v">vide</span> → <span class="good-v">192.168.80.254</span></td><td class="mono"><span class="good-v">192.168.100.10</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Si ça se passe mal</h3>
+  <div class="levels">
+    <div class="level stack">
+      <h4>Une démo échoue</h4>
+      <p>Ne cherche pas la panne devant le jury. Dis calmement :</p>
+      <p class="say">Le simulateur a une latence. Je vous montre la capture de validation pour avancer, et je reviendrai sur ce test si vous le souhaitez.</p>
+      <p class="small">Un incident bien géré ne coûte aucun point. S'enliser trois minutes en coûte beaucoup.</p>
+    </div>
+    <div class="level stack">
+      <h4>Le premier ping échoue</h4>
+      <p>C'est normal : le premier paquet sert à la résolution ARP. Lance toujours le test deux fois.</p>
+      <p class="say">Le premier paquet sert à la résolution ARP, c'est le comportement attendu.</p>
+    </div>
+    <div class="level stack">
+      <h4>Une question sans réponse</h4>
+      <p>Ne bluffe jamais.</p>
+      <p class="say">Je ne l'ai pas mis en œuvre dans cette maquette, mais le principe serait celui-ci.</p>
+      <p class="say">Je ne sais pas, mais voici comment je le vérifierais.</p>
+    </div>
+    <div class="level stack">
+      <h4>En avance ou en retard</h4>
+      <p><b>Moins de 10 minutes :</b> ajoute la démo de reprise sur panne (couper <code>Serial0/1/1</code>) et développe les préconisations.</p>
+      <p><b>Vers 20 minutes :</b> coupe le commentaire des démos 2 et 5, garde les commandes. Ne coupe jamais les préconisations.</p>
+    </div>
+  </div>
+
+  <h3>Trois histoires à raconter, trois phrases de posture</h3>
+  <div class="levels">
+    <div class="level">
+      <p class="sub">Un évaluateur ne retient pas des commandes, il retient des histoires. Elles répondent à « sur quoi avez-vous hésité » et « qu'est-ce qui ne va pas ».</p>
+      <ol>
+        <li><b>Le NAT statique retiré.</b> Posé, testé, il cassait l'accès qu'il devait permettre. Retiré en connaissance de cause.</li>
+        <li><b>La limite du simulateur sur les ACL.</b> Un comportement anormal, diagnostiqué avec la bonne commande : une limite d'outil, pas une erreur de conception.</li>
+        <li><b>Les passerelles croisées.</b> Une erreur de saisie trouvée en repassant ton livrable : l'Accueil et le Showroom portaient chacun la passerelle de l'autre salle.</li>
+      </ol>
+    </div>
+    <div class="level stack">
+      <p class="say">Je ne sais pas, mais voici comment je le vérifierais.</p>
+      <p class="say">Le simulateur a une latence, je vous montre la capture de validation.</p>
+      <p class="say">Oui, je l'ai identifié en repassant ma maquette, voici ce que j'en ai conclu.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== CHRONO -->
+<section id="script" class="tab" aria-labelledby="h-script" hidden>
+  <h2 id="h-script">Le script, chronométré</h2>
+  <p class="lede">Lance le chrono et déroule à voix haute. Le passage en cours s'éclaire. Si tu dépasses 17 minutes à blanc, coupe des phrases, pas des démos.</p>
+
+  <div class="clock" role="group" aria-label="Chronomètre de répétition">
+    <div class="clock-row">
+      <div class="digits" id="clock" aria-live="off">00:00</div>
+      <div class="clock-txt">
+        <p class="status idle" id="t-status">Prêt. Fourchette acceptée : 10 à 20 minutes, cible 15.</p>
+        <p class="nowline" id="t-now">Premier passage : <b>Architecture et adressage</b>, jusqu'à 03:00.</p>
+      </div>
+      <div class="btns">
+        <button type="button" class="btn primary" id="t-start">Démarrer</button>
+        <button type="button" class="btn" id="t-reset">Zéro</button>
+        <label class="follow"><input type="checkbox" id="t-follow" checked> Suivre le texte</label>
+      </div>
+    </div>
+    <div class="scale" aria-hidden="true">
+      <div class="track"></div><div class="ok-zone"></div><div class="fill" id="t-fill"></div>
+      <div class="tick" style="left:0"><span style="transform:none">0</span></div>
+      <div class="tick" style="left:50%"><span>10:00</span></div>
+      <div class="tick target" style="left:75%"><span>15:00</span></div>
+      <div class="tick" style="left:85%"><span>17:00</span></div>
+      <div class="tick" style="left:calc(100% - 1.5px)"><span style="transform:translateX(-100%)">20:00</span></div>
+    </div>
+  </div>
+
+  <div class="segs">
+
+    <article class="seg" data-from="0" data-to="180" data-title="Architecture et adressage">
+      <div class="when"><b>Ouverture</b>00:00 – 03:00</div>
+      <div class="body">
+        <h3>Architecture et adressage</h3>
+        <p class="note"><span class="lbl show">Tu montres</span>la topologie Packet Tracer en plein écran, puis la page du plan d'adressage de ton document de configuration.</p>
+        <p class="say">Impact Influence m'a confié le réseau de ses trois bâtiments. Je vais justifier mon adressage, démontrer le fonctionnement sur la maquette, puis présenter mes préconisations de sécurité.</p>
+        <p class="say">Le Rouge est le siège avec cinq services et le serveur de noms. Le Rouge est le siège avec cinq services et le serveur de noms. Le Bleu est le site commercial avec l'accueil et le showroom. Le Vert est le site technique avec le serveur web et la salle de réunion. Chaque bâtiment a son routeur, et les trois sont reliés en triangle. Le principe qui guide toute mon architecture : j'ai concentré la complexité là où elle se justifie. Le siège concentre cinq services, il a donc trois niveaux hiérarchiques, des VLAN, du filtrage et de la redondance. Les deux autres bâtiments ont deux salles chacun, déjà séparées physiquement par deux interfaces distinctes de leur routeur : ils sont donc volontairement simples.</p>
+        <p class="say">Sur les liaisons entre bâtiments, j'ai découpé le bloc public alloué en trois sous-réseaux en slash trente : exactement deux adresses utilisables, pour une liaison qui ne relie que deux routeurs. En interne, des slash vingt-quatre en adressage privé, 254 machines par service : évolutif et homogène. Et le numéro du VLAN se retrouve dans l'adresse, avec la passerelle toujours en point un, dans les deux versions du protocole.</p>
+        <p class="say">J'ai tout adressé deux fois parce que le plan d'action précise que l'adresse du site fournie par le fournisseur d'accès est en IPv6. Il fallait donc une infrastructure en double pile.</p>
+        <p class="note"><span class="lbl trap">Piège</span>Ne dis jamais qu'une liaison entre sites exige des adresses publiques, ni que le /30 sert à sécuriser.</p>
+      </div>
+    </article>
+
+    <article class="seg" data-from="180" data-to="270" data-title="Démo 1, les routes">
+      <div class="when"><b>Démo 1</b>03:00 – 04:30</div>
+      <div class="body">
+        <h3>Les routes</h3>
+        <div class="term" data-prompt="#"><div class="term-h"><span class="b b-vert">Vert</span><span class="dev">Routeur Vert</span></div><pre><code>show ip ospf neighbor
+show ip route</code></pre></div>
+        <p class="note"><span class="lbl ok">Attendu</span>deux voisins à l'état FULL, des lignes préfixées O.</p>
+        <p class="say">Les lignes marquées d'un O sont les réseaux appris par OSPF. Et j'ai bien deux voisins à l'état FULL : ce sont les deux côtés de mon triangle.</p>
+        <p class="say">J'ai choisi OSPF plutôt que des routes statiques pour une raison précise. Si un lien entre deux bâtiments est coupé, OSPF s'en aperçoit en quelques secondes et recalcule un chemin par l'autre côté. Avec des routes statiques, le réseau resterait coupé jusqu'à intervention humaine. C'est OSPF qui rend ma redondance réelle.</p>
+      </div>
+    </article>
+
+    <article class="seg" data-from="270" data-to="360" data-title="Démo 2, VLAN et adressage automatique">
+      <div class="when"><b>Démo 2</b>04:30 – 06:00</div>
+      <div class="body">
+        <h3>Les VLAN et l'adressage automatique</h3>
+        <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">CORE-L3</span></div><pre><code>show vlan brief</code></pre></div>
+        <p class="note"><span class="lbl show">Puis</span>PC RH → Desktop → IP Configuration : DHCP coché, adresse en 192.168.20.x, passerelle 192.168.20.1, DNS 192.168.100.10.</p>
+        <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">CORE-L3</span></div><pre><code>show ip dhcp binding</code></pre></div>
+        <p class="note"><span class="lbl show">Puis</span>PC RH → Command Prompt : <code>ping</code> vers l'adresse du PC DIRECTION relevée avant. Il répond : le routage entre les VLAN fonctionne.</p>
+        <p class="say">Chaque service a son VLAN, donc son propre réseau : les services sont cloisonnés. Le switch de cœur route entre les VLAN grâce à une interface virtuelle par VLAN, qui sert de passerelle.</p>
+        <p class="say">Il distribue aussi les adresses : une demande d'adresse est une diffusion, qui ne franchit pas un VLAN, et le cœur est présent dans chacun. Le binding le confirme côté serveur.</p>
+      </div>
+    </article>
+
+    <article class="seg" data-from="360" data-to="450" data-title="Démo 3, accès WAN et NAT">
+      <div class="when"><b>Démo 3</b>06:00 – 07:30</div>
+      <div class="body">
+        <h3>L'accès au réseau étendu et le NAT</h3>
+        <div class="term" data-prompt="C:\&gt;"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">PC INFORMATIQUE</span><span class="where">Command Prompt</span></div><pre><code>ping 132.186.32.41</code></pre></div>
+        <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span></div><pre><code>show ip nat translations</code></pre></div>
+        <p class="say">Une précision de vocabulaire : sur cette maquette il n'y a pas d'Internet réel. Le plan d'action définit cet accès comme la capacité des VLAN à joindre les routeurs de l'infrastructure. C'est ce que je vous montre ici, avec le NAT surchargé qui traduit toutes mes adresses privées derrière l'unique adresse publique du routeur.</p>
+        <p class="note"><span class="lbl trap">Piège</span>Depuis PC INFORMATIQUE, par cohérence avec ta politique : selon la liste 120, seul ce service serait autorisé vers l'infrastructure. Jamais de ping vers 8.8.8.8.</p>
+      </div>
+    </article>
+
+    <article class="seg" data-from="450" data-to="540" data-title="Démo 4, le serveur web">
+      <div class="when"><b>Démo 4</b>07:30 – 09:00</div>
+      <div class="body">
+        <h3>Le serveur web</h3>
+        <div class="term url" data-prompt="URL"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">PC FINANCE</span><span class="where">Web Browser</span></div><pre><code>impactinfluence.com
+impactinfluence6.com</code></pre></div>
+        <p class="say">Ce seul test valide quatre briques à la fois : la résolution du nom par mon serveur DNS, le routage entre VLAN par mon switch de cœur, le routage entre sites par OSPF, et la réponse du serveur web. Et il fonctionne dans les deux versions du protocole, comme l'exige le cahier des charges.</p>
+        <p class="say">Au passage, la traduction surchargée du siège s'applique, comme à tout trafic qui quitte le siège. Ce que je n'ai pas, c'est la traduction statique du bâtiment Vert, que j'ai retirée.</p>
+        <div class="term url" data-prompt="URL"><div class="term-h"><span class="b b-bleu">Bleu</span><span class="dev">PC ACCUEIL</span><span class="where">Web Browser, après correction</span></div><pre><code>http://192.168.90.80</code></pre></div>
+        <p class="say">Depuis le bâtiment Bleu, le serveur est accessible par son adresse, sans passer par le siège : c'est l'exigence de l'étape 5 du plan d'action.</p>
+        <p class="fixnote"><span class="lbl fix">Corrigé</span>L'ancien script disait que ce test « prouve que le filtrage laisse passer » : faux, les listes du Core ne sont pas actives. Et un document précédent disait qu'aucun NAT n'intervient sur ce trajet : faux aussi, la liste 1 couvre tout 192.168.0.0/16.</p>
+        <p class="note"><span class="lbl trap">Piège</span>Jamais de préfixe <code>www</code> : ce nom n'existe pas dans tes enregistrements.</p>
+      </div>
+    </article>
+
+    <article class="seg" data-from="540" data-to="600" data-title="Démo 5, le load-balancing">
+      <div class="when"><b>Démo 5</b>09:00 – 10:00</div>
+      <div class="body">
+        <h3>Le load-balancing LACP</h3>
+        <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">DISTRI-GAUCHE, puis DISTRI-DROITE</span></div><pre><code>show etherchannel summary</code></pre></div>
+        <p class="say">Mes deux switchs de distribution sont reliés par quatre câbles agrégés en une seule liaison logique via LACP. Sans ça, le Spanning Tree en bloquerait trois pour éviter les boucles, et je paierais quatre câbles pour le débit d'un seul. Là, la charge se répartit et une rupture de câble n'interrompt rien.</p>
+        <p class="say">Je lance la même commande sur l'autre switch : voir le même résultat des deux côtés prouve que la négociation a réellement abouti entre deux équipements.</p>
+      </div>
+    </article>
+
+    <article class="seg" data-from="600" data-to="720" data-title="Démo 6, le filtrage">
+      <div class="when"><b>Démo 6</b>10:00 – 12:00</div>
+      <div class="body">
+        <h3>Le filtrage, le passage le plus délicat</h3>
+        <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">CORE-L3</span></div><pre><code>show access-lists</code></pre></div>
+        <p class="say">Mes règles de cloisonnement sont écrites ici. La liste 110 donne au service Informatique l'accès à tous les VLAN. La liste 120 autorise les quatre autres services à joindre les serveurs et à communiquer entre eux, sans entrer dans l'Informatique. Elles traduisent exactement les quatre règles du cahier des charges.</p>
+        <p class="say">Je dois vous signaler un point. Je les ai appliquées sur les interfaces VLAN, et j'ai vérifié le résultat avec <code>show ip interface vlan 40</code> : elles ne sont pas actives. Le modèle 3650 de Packet Tracer accepte la commande mais ne l'implémente pas sur les interfaces virtuelles.</p>
+        <p class="say">En les relisant, je les corrigerais avant de les appliquer sur un équipement réel : telles quelles, elles bloqueraient les réponses vers l'Informatique, les pings vers les routeurs demandés à l'étape 3, et les demandes DHCP.</p>
+        <p class="say">En revanche, je peux vous démontrer une ACL pleinement fonctionnelle : la liste 100 de mon routeur, qui bloque les requêtes DNS venant des autres bâtiments.</p>
+        <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span></div><pre><code>show ip interface Serial0/1/0</code></pre></div>
+        <p class="note"><span class="lbl show">Puis</span>PC ACCUEIL (corrigé) → navigateur : <code>impactinfluence.com</code> échoue à résoudre, <code>http://192.168.90.80</code> affiche la page. Enfin <code>show access-lists</code> sur le Rouge : le compteur de la ligne <code>deny</code> a augmenté.</p>
+        <p class="say">Ma liste 100, elle, fonctionne. Elle est sur le routeur du siège, en entrée sur ses liaisons vers les autres bâtiments, et ferme le DNS à l'extérieur du siège. Son compteur le prouve.</p>
+        <p class="note"><span class="lbl trap">Piège</span>Enchaîne tout de suite sur la démo de remplacement. Ne laisse pas le silence s'installer après l'aveu.</p>
+      </div>
+    </article>
+
+    <article class="seg" data-from="720" data-to="840" data-title="Les trois préconisations">
+      <div class="when"><b>Sécurité</b>12:00 – 14:00</div>
+      <div class="body">
+        <h3>Les trois préconisations</h3>
+        <p class="note">Ton moment fort. Pour chacune : le risque d'abord, la mesure ensuite, le risque traité pour conclure. Les trois viennent du Guide d'hygiène informatique de l'ANSSI. <span class="lbl show">Tu montres</span>ton document de préconisations à l'écran.</p>
+        <p class="say">Première préconisation, le passage à SSH. L'administration à distance repose aujourd'hui sur Telnet, qui transmet tout en clair, mots de passe compris. Une simple capture de trafic donnerait à un attaquant interne les identifiants administrateur. Le passage à SSHv2 chiffre toute la session, c'est la mesure 21 de l'ANSSI. Risque traité : le vol d'identifiants.</p>
+        <p class="note"><span class="lbl show">Tu montres</span>la configuration de DISTRI-GAUCHE, lignes <code>interface Vlan10</code> / <code>description MANAGEMENT</code>.</p>
+        <p class="say">Deuxième préconisation, le VLAN d'administration. L'adresse d'administration de mon switch de distribution est dans le VLAN 10, un VLAN utilisateur. Si un poste de ce service est compromis, l'attaquant a un chemin direct vers l'interface de gestion d'un équipement critique. Ma mesure : déplacer les adresses de gestion dans le VLAN 99, déjà déclaré dans la base du Core sous le nom MANAGEMENT, et n'autoriser que le poste Informatique à y entrer. Il faudra aussi le déclarer sur les deux distributions, qui ne l'ont pas encore. C'est la mesure 28. Risque traité : la latéralisation d'une attaque.</p>
+        <p class="note"><span class="lbl show">Tu montres</span>SW-SHOWROOM et ses vingt-quatre ports sans protection.</p>
+        <p class="say">Troisième préconisation, le Port Security. Le showroom est la salle où l'entreprise reçoit ses visiteurs. Ses vingt-quatre ports sont actifs, sans aucune restriction. N'importe qui peut brancher un portable et se retrouver sur le réseau interne, en contournant toutes les protections périmétriques. Ma mesure, à l'accueil, au showroom et en salle de réunion : le switch mémorise l'adresse matérielle du poste légitime de chaque prise et désactive le port si un autre appareil apparaît. C'est la mesure 26. Risque traité : l'intrusion physique.</p>
+        <p class="say">Ces trois mesures ont un point commun : elles ne coûtent aucun matériel. Ce sont uniquement des durcissements de configuration.</p>
+        <div class="fixnote"><span class="lbl fix">À corriger à l'oral</span>dans ton document de préconisations :
+          <ul class="dash" style="margin-top:6px">
+            <li>la clé SSH doit faire au moins 2048 bits, et non 1024 ;</li>
+            <li>le filtrage du VLAN 99 se place sur le switch de cœur, qui route entre les VLAN, ou sur les lignes d'administration de chaque équipement. Pas sur le routeur ;</li>
+            <li>le VLAN 99 devra aussi être déclaré sur les deux distributions.</li>
+          </ul></div>
+      </div>
+    </article>
+
+    <article class="seg" data-from="840" data-to="900" data-title="Conclusion">
+      <div class="when"><b>Fin</b>14:00 – 15:00</div>
+      <div class="body">
+        <h3>Conclusion</h3>
+        <p class="say">Pour conclure : mon infrastructure relie les trois bâtiments par un triangle redondant, cloisonne les services du siège par des VLAN, et rend le serveur web accessible en IPv4 et en IPv6. J'ai assumé mes écarts au cahier des charges, chacun avec sa justification, et identifié la limite du simulateur sur le filtrage. Mes trois préconisations renforceraient la sécurité, sans aucun coût matériel.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- =================================================================== DÉMOS -->
+<section id="demos" class="tab" aria-labelledby="h-demos" hidden>
+  <h2 id="h-demos">Les six démonstrations</h2>
+  <p class="lede">La liste exacte du cahier des charges, avec les commandes, l'écran attendu et la phrase. Ordre de principe : tu affirmes, tu montres, tu expliques en une phrase.</p>
+
+  <div class="demo">
+    <div class="demo-h"><span class="num">1</span><h3>Les routes</h3></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-vert">Vert</span><span class="dev">Routeur Vert</span></div><pre><code>show ip ospf neighbor
+show ip route</code></pre></div>
+    <div>
+      <p class="cap">Écran attendu : exactement deux lignes, toutes deux à FULL</p>
+<pre class="screen"><code>Neighbor ID     Pri   State           Dead Time   Address         Interface
+192.168.70.254    0   <mark>FULL/  -</mark>        00:00:35    132.186.32.37   Serial0/1/0
+192.168.99.1      0   <mark>FULL/  -</mark>        00:00:34    132.186.32.42   Serial0/1/1</code></pre>
+    </div>
+    <ul class="dash">
+      <li><b>Neighbor ID</b> : l'identifiant du voisin, pas son adresse d'interface. En IPv4, il est élu automatiquement (192.168.70.254 pour le Bleu, 192.168.99.1 pour le Rouge).</li>
+      <li><b>Pri 0</b> : normal sur une liaison point à point, aucun routeur désigné n'est élu.</li>
+      <li><b>FULL</b> : la seule colonne qui compte. Les deux routeurs ont échangé toute leur base topologique.</li>
+      <li><b>Dead Time</b> qui défile : bon signe, le compte à rebours repart à chaque message de vie.</li>
+      <li>Dans <code>show ip route</code>, les VLAN du siège apparaissent en <code>O E2</code> : ce sont les routes statiques du Rouge, redistribuées dans OSPF.</li>
+    </ul>
+    <p class="say">OSPF a appris les routes vers les sites distants, et mes deux adjacences confirment que les deux côtés du triangle sont opérationnels.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><span class="num">2</span><h3>Les VLAN et le DHCP</h3></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">CORE-L3</span></div><pre><code>show vlan brief
+show ip dhcp binding</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>VLAN 10 Informatique, 20 RH, 30 Direction, 40 Finance, 50 Commercial, 99 MANAGEMENT, 100 Serveurs. Les baux des postes du siège dans le binding.</p>
+    <p class="note"><span class="lbl show">Sur PC RH</span>Desktop → IP Configuration : DHCP coché, 192.168.20.x, passerelle 192.168.20.1, DNS 192.168.100.10. Puis un <code>ping</code> vers l'adresse du PC DIRECTION, relevée avant : il répond, le routage entre VLAN fonctionne.</p>
+    <p class="say">Chaque service est isolé dans son VLAN. Le switch Core porte une interface virtuelle par VLAN : c'est lui qui assure le routage inter-VLAN et qui sert de passerelle. Il porte aussi le DHCP, parce qu'il reçoit directement les requêtes de chaque VLAN.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><span class="num">3</span><h3>L'accès au WAN et le NAT</h3></div>
+    <div class="term" data-prompt="C:\&gt;"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">PC INFORMATIQUE</span><span class="where">Command Prompt</span></div><pre><code>ping 132.186.32.41</code></pre></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span></div><pre><code>show ip nat translations</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>des réponses au ping (ignore le premier timeout), puis des lignes où une adresse <code>192.168.10.x</code> est traduite derrière <code>132.186.32.33</code>.</p>
+    <p class="note"><span class="lbl trap">Pourquoi .33</span>La règle prend l'adresse de <code>Serial0/1/0</code>, même quand le paquet sort par <code>Serial0/1/1</code>. C'est pour ça qu'on ne coupe jamais <code>Serial0/1/0</code> en démo de panne.</p>
+    <p class="say">Mon NAT surchargé traduit toutes les adresses privées du siège derrière l'unique adresse publique du routeur, les sessions étant distinguées par leurs numéros de port. Une seule adresse publique pour toute l'entreprise.</p>
+    <p class="note">Si on te demande si tous les VLAN joignent les routeurs : oui, c'est l'étape 3 du plan d'action, et les listes du Core n'étant pas actives, tu peux le montrer depuis n'importe quel poste du siège.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><span class="num">4</span><h3>L'accès au serveur web</h3></div>
+    <div class="term url" data-prompt="URL"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">PC FINANCE</span><span class="where">Web Browser</span></div><pre><code>impactinfluence.com
+impactinfluence6.com</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>la page par défaut du serveur Packet Tracer, deux fois. Ta démo la plus rentable : répète-la.</p>
+    <ol class="steps">
+      <li><b>Résolution de noms</b> : sinon le nom n'aurait pas été traduit et rien ne serait parti.</li>
+      <li><b>Routage entre VLAN</b> : sinon la requête n'aurait jamais atteint le serveur DNS.</li>
+      <li><b>Routage entre sites par OSPF</b> : sinon le Rouge ne connaîtrait pas le segment du Vert.</li>
+      <li><b>Réponse du serveur HTTP</b> : la page s'affiche.</li>
+    </ol>
+    <p class="note"><span class="lbl fix">En bonus</span>le NAT surchargé, puisque la requête quitte le siège. Ne prétends pas que ce test prouve le filtrage.</p>
+    <div class="term url" data-prompt="URL"><div class="term-h"><span class="b b-bleu">Bleu</span><span class="dev">PC ACCUEIL</span><span class="where">Web Browser, après correction</span></div><pre><code>http://192.168.90.80</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>la page s'affiche : depuis le Bleu, le serveur est joignable par son adresse, directement par la liaison Bleu-Vert. C'est l'exigence de l'étape 5. Par son nom, ça échoue, et c'est voulu : la liste 100 réserve le DNS au siège.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><span class="num">5</span><h3>Le load-balancing</h3></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">DISTRI-GAUCHE, puis DISTRI-DROITE</span></div><pre><code>show etherchannel summary</code></pre></div>
+    <div>
+      <p class="cap">Écran attendu, sur les deux distributions</p>
+<pre class="screen"><code>Group  Port-channel  Protocol    Ports
+------+-------------+-----------+------------------------------------------
+1      <mark>Po1(SU)</mark>         LACP      Gig1/0/2(<mark>P</mark>) Gig1/0/3(<mark>P</mark>) Gig1/0/4(<mark>P</mark>) Gig1/0/5(<mark>P</mark>)</code></pre>
+    </div>
+    <p class="note"><b>Po1</b> : la liaison logique. <b>S</b> : niveau 2. <b>U</b> : en service. <b>P</b> : port regroupé dans le faisceau. À connaître aussi : <b>D</b> pour un port hors service, <b>s</b> minuscule pour un port aux paramètres incohérents, exclu.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><span class="num">6</span><h3>Le filtrage</h3></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">CORE-L3</span></div><pre><code>show access-lists
+show ip interface vlan 40</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>les listes 110 et 120 écrites, puis <code>Inbound access list is not set</code>. Annonce-le toi-même avec la phrase du chrono, et ajoute les trois corrections qu'elles demanderaient avant d'être appliquées : laisser revenir les réponses vers l'Informatique, autoriser les pings vers les routeurs, laisser passer les demandes DHCP.</p>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span></div><pre><code>show ip interface Serial0/1/0</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span><code>Inbound access list is 100</code>.</p>
+    <div class="term url" data-prompt="URL"><div class="term-h"><span class="b b-bleu">Bleu</span><span class="dev">PC ACCUEIL</span><span class="where">Web Browser, après correction</span></div><pre><code>impactinfluence.com
+192.168.90.80</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>le nom échoue à résoudre, l'adresse affiche la page.</p>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span></div><pre><code>show access-lists</code></pre></div>
+    <div>
+      <p class="cap">Écran attendu : le compteur de la ligne deny a augmenté</p>
+<pre class="screen"><code>Extended IP access list 100
+    10 deny udp any host 192.168.100.10 eq domain <mark>(n match(es))</mark>
+    20 permit ip any any (n match(es))</code></pre>
+    </div>
+    <p class="say">Le filtre du serveur DNS est sur le routeur du siège, en entrée sur ses deux liaisons vers les autres bâtiments. Les postes du siège n'ont jamais besoin de franchir le routeur pour joindre le serveur ; les requêtes du Bleu et du Vert doivent obligatoirement le traverser.</p>
+    <p class="note"><span class="lbl trap">Piège</span>Ne refais pas l'ancien test « la Finance ne joint pas l'Informatique » : les listes du Core n'étant pas actives, le ping réussirait. Et n'utilise pas un ping du Bleu vers le serveur DNS pour illustrer la nuance du port 53 : la réponse serait traduite par le NAT et le résultat ne prouverait rien.</p>
+  </div>
+
+  <h3>Les tests que l'évaluateur peut improviser</h3>
+  <p class="small" style="margin-top:6px;max-width:var(--measure)">Répète-les au moins une fois chacun sur une copie de ta maquette, pour ne pas chercher tes clics en direct.</p>
+
+  <div class="demo">
+    <div class="demo-h"><h3>« Et si un lien entre deux bâtiments est coupé ? »</h3></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span><span class="where">avant</span></div><pre><code>show ip route 192.168.90.0</code></pre></div>
+    <div class="term"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span><span class="where">couper le lien direct vers le Vert</span></div><pre><code>conf t
+interface Serial0/1/1
+ shutdown
+end</code></pre></div>
+    <p class="note">Attends <b>30 secondes</b> que OSPF reconverge, puis :</p>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span><span class="where">après</span></div><pre><code>show ip route 192.168.90.0
+show ip ospf neighbor</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>la route vers le serveur web passe par le Bleu (132.186.32.34), un seul voisin FULL, et <code>ping 192.168.90.80</code> répond toujours depuis PC INFORMATIQUE. Remets <code>no shutdown</code> et attends encore 30 secondes.</p>
+    <p class="note"><span class="lbl bad">Jamais</span><code>Serial0/1/0</code> : elle porte l'adresse du NAT.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><h3>« Et si un câble LACP casse ? »</h3></div>
+    <div class="term"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">DISTRI-GAUCHE</span></div><pre><code>conf t
+interface GigabitEthernet1/0/2
+ shutdown
+end
+show etherchannel summary</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>Po1 reste <code>SU</code>, avec trois ports <code>P</code> et un port <code>D</code>. Le trafic passe toujours. Remets <code>no shutdown</code>.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><h3>« Et si un switch de distribution tombe ? »</h3></div>
+    <p class="note">Éteins DISTRI-DROITE (onglet Physical, interrupteur). Après la reconvergence du Spanning Tree, les postes pinguent toujours leur passerelle et le serveur web. Rallume-le ensuite.</p>
+    <p class="say">Chaque switch d'accès est relié aux deux distributions : c'est ma topologie en V. La perte d'une distribution entière ne coupe aucun service, et ça fonctionne parce que les deux distributions sont configurées à l'identique.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><h3>« Montrez-moi que le DNS n'est pas joignable depuis l'extérieur »</h3></div>
+    <div class="term" data-prompt="C:\&gt;"><div class="term-h"><span class="b b-bleu">Bleu</span><span class="dev">PC ACCUEIL</span><span class="where">après correction</span></div><pre><code>nslookup impactinfluence.com</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>échec de la requête, puis le compteur de la ligne <code>deny</code> dans <code>show access-lists</code> sur le Rouge. C'est le compteur qui prouve que c'est bien la liste 100 qui a bloqué.</p>
+    <p class="say">Ma liste filtre spécifiquement le service DNS, le port 53, pas toute connectivité vers ce serveur.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><h3>« Un nouveau poste arrive, montrez-moi le DHCP »</h3></div>
+    <p class="note">Glisse un PC-PT, relie-le à un port libre de SW-RH en câble cuivre droit, puis Desktop → IP Configuration → DHCP. <span class="lbl ok">Attendu</span>192.168.20.x, passerelle 192.168.20.1, DNS 192.168.100.10.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><h3>« Montrez-moi l'IPv6 »</h3></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-vert">Vert</span><span class="dev">Routeur Vert</span></div><pre><code>show ipv6 interface brief
+show ipv6 ospf neighbor
+show ipv6 route</code></pre></div>
+    <div class="term" data-prompt="C:\&gt;"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">PC FINANCE</span></div><pre><code>ipconfig
+ping 2001:0:CAFE:90::80</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>voisins 1.1.1.1 et 2.2.2.2 à FULL (les identifiants que tu as fixés), les réseaux du siège en <code>OE2</code>, la passerelle du poste en <code>FE80::1</code>. Puis <code>impactinfluence6.com</code> dans le navigateur.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-h"><h3>« Montrez-moi les adresses de management des switchs »</h3></div>
+    <div class="term" data-prompt="#"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">DISTRI-GAUCHE, puis DISTRI-DROITE</span></div><pre><code>show ip interface brief</code></pre></div>
+    <p class="note"><span class="lbl ok">Attendu</span>Vlan1 en 192.168.1.2 (Gauche) et 192.168.1.3 (Droite), Vlan10 en 192.168.10.2 et 192.168.10.3. C'est l'exigence « une interface VLAN est configurée sur chacun de ces switchs ».</p>
+  </div>
+
+  <h3>Les dix commandes</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Commande</th><th>Sur quoi</th><th>Ce que ça prouve</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">show ip interface brief</td><td>tout</td><td>interfaces actives et adresses</td></tr>
+        <tr><td class="mono">show ip route</td><td>routeur, Core</td><td>routes, dont OSPF (O)</td></tr>
+        <tr><td class="mono">show ip ospf neighbor</td><td>routeur</td><td>adjacences FULL</td></tr>
+        <tr><td class="mono">show vlan brief</td><td>switch</td><td>VLAN et affectation des ports</td></tr>
+        <tr><td class="mono">show interfaces trunk</td><td>switch</td><td>liens qui transportent plusieurs VLAN</td></tr>
+        <tr><td class="mono">show etherchannel summary</td><td>distribution</td><td>agrégation LACP</td></tr>
+        <tr><td class="mono">show access-lists</td><td>Core, Rouge</td><td>règles et compteurs</td></tr>
+        <tr><td class="mono">show ip interface vlan 40</td><td>Core</td><td>si une ACL est réellement liée</td></tr>
+        <tr><td class="mono">show ip nat translations</td><td>Rouge</td><td>traductions en cours</td></tr>
+        <tr><td class="mono">show ipv6 interface brief</td><td>routeur</td><td>double adressage</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small mt" style="max-width:var(--measure)"><code>terminal length 0</code> supprime la pagination. <code>show running-config | include &lt;mot&gt;</code> filtre la configuration, mais sur l'IOS 16.3 du Core il ne remonte pas toujours les lignes indentées : pour vérifier une ACL, préfère <code>show ip interface &lt;nom&gt;</code>.</p>
+</section>
+
+<!-- =================================================================== JURY -->
+<section id="jury" class="tab" aria-labelledby="h-jury" hidden>
+  <h2 id="h-jury">Les questions du jury</h2>
+  <p class="lede">Lis la question, réponds à voix haute, puis ouvre. Une phrase, deux au maximum : une réponse longue donne l'impression que tu récites. Marque chaque carte « Je sais » ou « À revoir ».</p>
+
+  <div class="toolbar" role="toolbar" aria-label="Filtrer les questions">
+    <button type="button" class="chipbtn" data-filter="all" aria-pressed="true">Toutes</button>
+    <button type="button" class="chipbtn" data-filter="new" aria-pressed="false">Pas encore notées</button>
+    <button type="button" class="chipbtn" data-filter="revoir" aria-pressed="false">À revoir</button>
+    <button type="button" class="chipbtn" data-filter="su" aria-pressed="false">Sues</button>
+    <span class="sep"></span>
+    <span class="score" id="q-score"></span>
+    <button type="button" class="btn primary" id="q-rand">Question au hasard</button>
+    <button type="button" class="btn quiet" id="q-close">Tout replier</button>
+  </div>
+
+  <h3 style="margin-top:8px">Les écarts au cahier des charges, à assumer</h3>
+  <div class="tbl" style="margin-bottom:8px">
+    <table>
+      <thead><tr><th>Demandé</th><th>Ce que tu as fait</th><th>Ta justification</th></tr></thead>
+      <tbody>
+        <tr><td>Le DHCP sur les distributions</td><td>Sur le cœur</td><td>Une demande d'adresse est une diffusion qui reste dans son VLAN ; le cœur a déjà une interface et la passerelle dans chaque VLAN. Sur les distributions : une adresse par VLAN sur chacune, et deux serveurs à coordonner.</td></tr>
+        <tr><td>Un NAT statique sur le routeur Vert</td><td>Testé, puis retiré</td><td>Il cassait l'accès des postes au serveur, qui était l'objectif de l'étape 5. Le routage direct remplit cet objectif.</td></tr>
+        <tr><td>Le serveur sous impactinfluence.com</td><td>Deux noms, un par version</td><td>Tester l'IPv4 et l'IPv6 séparément. Sur un vrai serveur, un seul nom porterait les deux enregistrements.</td></tr>
+        <tr><td>Le cloisonnement entre les VLAN</td><td>Listes écrites, non actives</td><td>Montré avec <code>show ip interface vlan 40</code>. Avant de les appliquer, trois corrections : réponses vers l'Informatique, pings vers les routeurs, DHCP.</td></tr>
+        <tr><td>Un pool IPv6 /64</td><td>Quatorze réseaux /64</td><td>La norme veut un /64 par réseau : cela revient à travailler dans un /48, ce qu'un fournisseur attribue normalement à une entreprise.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="qgroup"><h3>Architecture et adressage</h3>
+    <details class="qa" data-q="archi"><summary><span class="qa-q">Décrivez-moi l'architecture que vous avez mise en place.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">J'ai concentré la complexité là où elle se justifie. Le bâtiment Rouge concentre cinq services, il a donc une architecture à trois niveaux avec des VLAN, du filtrage et une topologie redondante. Les bâtiments Bleu et Vert ont deux salles chacun, déjà séparées physiquement par deux interfaces distinctes du routeur : ils sont donc plats. Mes trois routeurs forment un triangle, chacun a deux voisins, et si un lien tombe le trafic passe par l'autre côté.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 1</span></div></div></details>
+
+    <details class="qa" data-q="adressage"><summary><span class="qa-q">Justifiez vos choix en matière d'adressage réseau.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">J'ai dimensionné chaque masque selon le besoin réel. Des slash trente sur les liaisons entre routeurs, parce qu'un lien point à point ne relie que deux équipements et qu'un slash trente donne exactement deux adresses utilisables, sans gaspiller d'adresses publiques. Des slash vingt-quatre en interne pour l'évolutivité. Et le numéro du VLAN se retrouve dans l'adresse, en IPv4 comme en IPv6, pour qu'un administrateur identifie un service au premier coup d'œil.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Une liaison entre sites fonctionne parfaitement en privé : tu utilises du public parce que le cahier des charges t'a alloué ce bloc. Et le /30 n'a rien à voir avec la sécurité.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 2</span></div></div></details>
+
+    <details class="qa" data-q="adressage-simple"><summary><span class="qa-q">Expliquez-moi votre adressage comme si je n'y connaissais rien.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sur les liens entre bâtiments, j'utilise des masques qui ne donnent que deux adresses, parce qu'il n'y a que deux routeurs sur chaque liaison. À l'intérieur des bâtiments, des masques plus larges pour laisser de la place aux postes. Et le numéro du service se retrouve dans l'adresse, ce qui rend le plan lisible d'un coup d'œil.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Script, discussion Q1</span></div></div></details>
+
+    <details class="qa" data-q="pas-24"><summary><span class="qa-q">Pourquoi pas un /24 sur les liaisons, comme à l'intérieur ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sur une liaison, deux adresses suffisent. Un /24 gaspillerait deux cent cinquante-deux adresses publiques, qui sont rares et coûteuses.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+
+    <details class="qa" data-q="serie"><summary><span class="qa-q">Pourquoi des liaisons série, et comment fonctionnent-elles ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sur une liaison série, il n'y a pas de synchronisation automatique : un des deux routeurs doit imposer la cadence, c'est le DCE. Chez moi, le routeur du siège est maître sur ses deux liaisons, le Bleu l'est vers le Vert, et le Vert ne l'est jamais. Chaque liaison compte donc exactement un maître d'horloge, ce qui est la condition pour qu'elle monte.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Le Bleu et le Vert portent aussi <code>clock rate</code> sur <code>Serial0/2/0</code> et <code>Serial0/2/1</code> : « ces interfaces ne sont pas utilisées, elles sont en shutdown ».</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 3</span></div></div></details>
+
+    <details class="qa" data-q="satellites"><summary><span class="qa-q">Pourquoi les bâtiments Bleu et Vert sont-ils si peu configurés ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Deux salles chacun, déjà séparées physiquement par deux interfaces distinctes du routeur. Il n'y a ni service à cloisonner ni chemin à doubler. Ajouter des VLAN là-bas serait de la complexité sans bénéfice.</p>
+      <p class="note">Si on relève qu'ils sont en <code>pvst</code> et le siège en <code>rapid-pvst</code> : « sans chemin redondant, le mode rapide n'apporte rien. Par cohérence d'exploitation on pourrait les aligner, c'est une commande. »</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Script Q11, dossier 2.7</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>Routage</h3>
+    <details class="qa" data-q="ospf"><summary><span class="qa-q">Pourquoi OSPF plutôt que des routes écrites à la main ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Avec trois sites en triangle, OSPF détecte une coupure en quelques secondes et recalcule automatiquement un chemin de secours par l'autre côté. Une route statique ne fera jamais cela. Sans OSPF, mon triangle ne serait que trois câbles décoratifs.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 4</span></div></div></details>
+
+    <details class="qa" data-q="coupure"><summary><span class="qa-q">Un câble entre deux bâtiments est sectionné cette nuit. Que se passe-t-il ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Rien de visible. Mes trois routeurs forment un triangle, donc chacun a deux voisins. OSPF détecte la coupure en quelques secondes et fait passer le trafic par l'autre côté. C'est justement pour ça que j'ai choisi un protocole dynamique.</p>
+      <p class="note"><span class="lbl show">« Montrez-le-moi »</span>Sur le Rouge : <code>shutdown</code> sur <code>Serial0/1/1</code>, attendre trente secondes, montrer que le serveur web répond toujours, puis <code>no shutdown</code>. Jamais <code>Serial0/1/0</code>.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Script Q2 et Q3</span></div></div></details>
+
+    <details class="qa" data-q="statiques"><summary><span class="qa-q">Votre routeur du siège a à la fois OSPF et des routes statiques. C'est contradictoire ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Ce n'est pas contradictoire, les deux ont des rôles distincts. OSPF gère l'interconnexion des trois sites et la reprise sur panne. Mes VLAN sont gérés par le switch de cœur, pas par le routeur, donc le routeur ne les connaît pas. Les routes statiques les lui font connaître, et la commande de redistribution les injecte dans OSPF pour que les autres bâtiments les apprennent. Et j'ai doublé le mécanisme en IPv6.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Les routes statiques ne sont pas un secours, et elles n'« allègent » pas la table. Six en IPv4, six en IPv6, plus <code>redistribute static</code>. Le Bleu et le Vert n'en ont aucune : leurs réseaux sont branchés sur eux.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 5</span></div></div></details>
+
+    <details class="qa" data-q="network0"><summary><span class="qa-q">Pourquoi <code>network 0.0.0.0 255.255.255.255</code> sur le Bleu et le Vert ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Cela déclare toutes les interfaces du routeur dans OSPF en une seule ligne. Sur un site simple c'est concis et sans risque ; sur un site où certaines interfaces ne doivent pas participer, je déclarerais chaque réseau individuellement, comme je l'ai fait sur le Rouge.</p>
+      <p class="note">Et si on relève <code>network 132.186.32.0 0.0.0.255</code> sur le Rouge : « cette ligne est plus large que nécessaire et recouvre les deux précédentes ; dans une configuration épurée je ne garderais que les déclarations en slash trente. »</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Dossier 2.2, vérification 6</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>Le bâtiment Rouge</h3>
+    <details class="qa" data-q="intervlan"><summary><span class="qa-q">Vos VLAN sont séparés. Comment communiquent-ils entre eux ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Un VLAN est un réseau distinct, il faut donc router entre eux. La commande <code>ip routing</code> fait de mon switch de cœur un équipement de niveau 3 : il possède une interface virtuelle dans chaque VLAN, qui sert de passerelle au service, et c'est ce qui permet aux VLAN de communiquer. Sans cette commande, mes six services seraient hermétiquement isolés.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 6</span></div></div></details>
+
+    <details class="qa" data-q="dot1q"><summary><span class="qa-q">Comment faites-vous passer plusieurs VLAN sur un seul câble ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Par l'étiquetage 802.1Q. Un port access appartient à un seul VLAN et transporte des trames non étiquetées : c'est pour les postes. Un port trunk transporte plusieurs VLAN en étiquetant chaque trame. L'étiquette naît à la sortie d'un port trunk, et elle meurt à la sortie vers un poste. Entre les deux, elle voyage sans être touchée.</p>
+      <p class="note">Le mode se règle port par port : un même switch utilise les deux. Les distributions déclarent les six VLAN sans avoir de poste dedans parce qu'un switch ne transporte que les VLAN qu'il connaît.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 7</span></div></div></details>
+
+    <details class="qa" data-q="port-route"><summary><span class="qa-q">Pourquoi le port du Core vers le routeur n'est-il ni access ni trunk ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">La commande <code>no switchport</code> transforme un port de commutation en port routé, avec sa propre adresse IP. Cela crée une liaison de niveau 3 entre le Core et le routeur, en slash trente puisque seuls deux équipements sont concernés.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Il est routé parce que c'est une liaison entre deux équipements de routage, sans VLAN à transporter. Rien à voir avec les ACL.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 6</span></div></div></details>
+
+    <details class="qa" data-q="dhcp"><summary><span class="qa-q">Le DHCP devait être sur les distributions. Pourquoi est-il sur le cœur ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Une demande d'adresse est une diffusion, qui ne franchit pas les frontières d'un VLAN. Le cœur a déjà une interface et la passerelle dans chaque VLAN : un seul serveur suffit, sans relais. Sur les distributions, il aurait fallu leur donner une adresse dans chaque VLAN, et partager les plages entre deux serveurs pour ne pas attribuer deux fois la même adresse.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 8</span></div></div></details>
+
+    <details class="qa" data-q="pools"><summary><span class="qa-q">À quoi servent les exclusions et POOL-GENERAL ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Les dix premières adresses de chaque réseau sont exclues : c'est la zone des équipements fixes, passerelle en point un, adresses d'administration, serveur de noms. Sans elles, un poste pourrait recevoir l'adresse du serveur DNS et plus rien ne se résoudrait. POOL-GENERAL, lui, ne sert à rien : c'est un reste de mes premiers essais. Chaque VLAN a sa propre plage, et mes postes reçoivent bien la passerelle de leur VLAN. Je le supprimerais.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 8</span></div></div></details>
+
+    <details class="qa" data-q="portfast"><summary><span class="qa-q">Pourquoi PortFast sur les switchs d'accès ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sans lui, le Spanning Tree met une trentaine de secondes à ouvrir le port, et la requête DHCP du poste part dans le vide. PortFast fait passer immédiatement le port en état actif. On ne l'active que sur les ports terminaux, jamais sur un lien entre switchs, sous peine de créer une boucle.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Dossier 2.6</span></div></div></details>
+
+    <details class="qa" data-q="stp-root"><summary><span class="qa-q">Votre Core est-il la racine du Spanning Tree ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">La racine est élue automatiquement, selon le plus faible identifiant de pont. La forcer sur le Core avec une priorité basse serait l'amélioration naturelle, puisqu'il est le point le plus central.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Ne prétends jamais l'avoir forcée : la seule ligne Spanning Tree du Core est <code>spanning-tree mode rapid-pvst</code>.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Vérification maquette, point B</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>Le filtrage</h3>
+    <details class="qa" data-q="acl"><summary><span class="qa-q">Comment contrôlez-vous qui a le droit de parler à qui ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">J'ai deux listes de contrôle d'accès. La première donne au service Informatique l'accès à tous les VLAN, parce qu'il administre le parc. La seconde limite les quatre services métier aux deux serveurs et à leurs collègues. Je n'ai écrit aucune règle de blocage : le VLAN Informatique n'apparaît simplement pas dans les destinations autorisées, il tombe donc dans l'interdiction implicite. C'est le principe du moindre privilège.</p>
+      <p class="note">Trois propriétés : lecture jusqu'à la première correspondance, interdiction implicite en fin de liste, et une liste doit être accrochée à une interface pour agir.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 9</span></div></div></details>
+
+    <details class="qa" data-q="acl-ou"><summary><span class="qa-q">Pourquoi ces listes sur le switch de cœur, et pas ailleurs ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sur le cœur, parce que c'est le seul point de passage entre deux VLAN : filtrer là, c'est filtrer une fois pour toutes les combinaisons. Sur les interfaces virtuelles, parce que c'est là que le paquet entre dans le routage. En entrée, parce qu'on filtre au plus près de la source : un paquet refusé ne consomme aucune ressource de routage.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 10</span></div></div></details>
+
+    <details class="qa" data-q="acl100"><summary><span class="qa-q">Pourquoi le filtre du serveur DNS est-il sur le routeur, et pas sur le cœur ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Le filtre est sur le routeur du siège, en entrée sur ses deux liaisons vers les autres bâtiments. Les postes du siège n'ont jamais besoin de franchir le routeur pour joindre le serveur. Les requêtes venant du Bleu ou du Vert doivent obligatoirement le traverser. Placer le filtre à la frontière du bâtiment sépare donc exactement le trafic interne du trafic externe, sans écrire une seule règle sur le cœur.</p>
+      <p class="note">Le <code>permit ip any any</code> final est indispensable : sans lui, l'interdiction implicite bloquerait aussi OSPF et les adjacences tomberaient.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 10</span></div></div></details>
+
+    <details class="qa" data-q="limite"><summary><span class="qa-q">Montrez-moi que la Finance ne peut pas atteindre l'Informatique.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Mes listes sont écrites dans la configuration du switch de cœur et traduisent exactement les quatre règles de cloisonnement du cahier des charges. Je les ai appliquées sur les interfaces virtuelles et j'ai vérifié le résultat : aucune n'est active. Le modèle de switch du simulateur accepte la commande sans l'implémenter sur les interfaces virtuelles. Sur un équipement réel, le filtrage serait effectif. En revanche je peux vous démontrer une liste pleinement fonctionnelle, celle de mon routeur, qui protège le serveur DNS.</p>
+      <p class="note">Ajoute que, telles quelles, elles auraient trois défauts à corriger avant de les appliquer : elles bloqueraient les réponses vers l'Informatique, les pings vers les routeurs demandés à l'étape 3, et les demandes DHCP.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Reste sur le constat, qui est indiscutable, et présente la cause comme une explication, pas une certitude. Enchaîne aussitôt sur la démo de la liste 100.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 11</span></div></div></details>
+
+    <details class="qa" data-q="direction"><summary><span class="qa-q">La Direction est le service le plus sensible. Pourquoi n'est-elle pas mieux protégée ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Parce que le cahier des charges la place explicitement dans le même groupe que les RH, la Finance et les Commerciaux, qui communiquent entre eux. Et la confidentialité de ses données relève des droits d'accès sur les fichiers, pas du cloisonnement réseau : ce sont deux couches différentes. Si vous vouliez un isolement réseau en plus, ce serait une liste dédiée sur son VLAN.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Script, discussion Q5</span></div></div></details>
+
+    <details class="qa" data-q="vlan-routeurs"><summary><span class="qa-q">Tous les VLAN peuvent-ils joindre les routeurs ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Oui : c'est ce que demande l'étape 3 du plan d'action, et je peux le montrer depuis n'importe quel poste du siège.</p>
+      <p class="note">C'est vrai parce que les listes du Core ne sont pas actives. Appliquée telle quelle, la liste 120 l'interdirait : c'est l'un de ses trois défauts.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+
+    <details class="qa" data-q="nom-bleu"><summary><span class="qa-q">Pourquoi le nom du site ne fonctionne-t-il pas depuis le bâtiment Bleu ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Parce que ma liste 100 réserve le DNS au réseau local du siège, comme l'exige le cahier des charges. Le serveur web, lui, reste accessible par son adresse.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>La traduction d'adresses</h3>
+    <details class="qa" data-q="pat"><summary><span class="qa-q">Montrez-moi que vos postes sortent bien vers le réseau étendu.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Le NAT surchargé traduit toutes mes adresses privées derrière l'unique adresse publique du routeur, les sessions étant distinguées par leurs numéros de port. L'intérêt est l'économie : une seule adresse publique pour toute l'entreprise, alors que ces adresses sont rares et coûteuses.</p>
+      <p class="note">La liste 1 n'est pas un filtre : elle désigne les adresses éligibles. Trois conditions : entrée par une interface <code>inside</code>, sortie par une <code>outside</code>, source dans la liste.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 12</span></div></div></details>
+
+    <details class="qa" data-q="nat-diff"><summary><span class="qa-q">Quelle est la différence entre vos deux formes de NAT ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sortie pour les postes, entrée pour le serveur. Le surchargé sert au trafic qui part de l'intérieur : plusieurs postes partagent une adresse publique, le temps d'une session. Le statique permet d'être joint depuis l'extérieur : il faut une correspondance fixe et une adresse stable.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 13</span></div></div></details>
+
+    <details class="qa" data-q="nat-statique"><summary><span class="qa-q">Le plan d'action prévoyait un NAT statique. Où est-il ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Je l'ai posé et testé. Il cassait précisément ce qu'il devait permettre : la règle réécrit l'adresse du serveur dès que sa réponse part vers une interface extérieure, et les postes du siège arrivent justement par là. La réponse revenait avec une adresse d'expéditeur qui ne correspondait plus à la session ouverte, et elle était rejetée. Or l'objectif du plan d'action est que les postes accèdent au serveur web. Sur cette maquette il n'y a pas d'Internet réel : le serveur est déjà joignable par le routage OSPF. J'ai retenu la configuration qui remplit l'objectif. Face à un vrai réseau public, la traduction statique serait indispensable, et je connais la commande.</p>
+      <p class="note">Pour qu'il serve, les postes auraient dû joindre le serveur par son adresse publique, annoncée jusqu'au bâtiment Vert. La commande : <code>ip nat inside source static 192.168.90.80 132.186.32.45</code>. L'adresse .45 était libre. Image : « ils sont traités comme des visiteurs alors qu'ils sont des collègues ».</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 13</span></div></div></details>
+
+    <details class="qa" data-q="nat-intersites"><summary><span class="qa-q">Le trafic entre vos sites est donc traduit ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Oui, c'est la conséquence directe de la consigne du plan d'action, qui demande un NAT surchargé sur le routeur du siège. Tout trafic qui quitte le siège est traduit, et c'est transparent pour les postes. En production, j'exclurais de la traduction les destinations internes à l'entreprise, avec une liste plus fine que la liste 1.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 16</span></div></div></details>
+
+    <details class="qa" data-q="nat-retour"><summary><span class="qa-q">Où se fait le NAT, et que fait-il au retour ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sur le routeur Rouge. À l'aller, il remplace l'expéditeur par son adresse publique et note la ligne dans sa table. Au retour, il retrouve la ligne grâce au numéro de port et remplace le destinataire.</p>
+      <p class="note">Au retour, l'ordre s'inverse : la liste 100 d'abord, puis le NAT inverse, puis la route statique vers le cœur. Il doit connaître la vraie destination avant de choisir la route.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>La redondance</h3>
+    <details class="qa" data-q="lacp"><summary><span class="qa-q">Montrez-moi votre load-balancing entre les switchs.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Sans agrégation, je paierais quatre câbles pour le débit d'un seul, parce que le protocole anti-boucle en bloquerait trois. LACP les présente comme une liaison logique unique : la charge se répartit et une rupture n'interrompt rien. Et j'ai un second niveau de redondance : chaque switch d'accès est relié aux deux distributions, donc la panne de l'une ne coupe aucun service. Cela fonctionne parce que mes deux distributions sont configurées à l'identique.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 14</span></div></div></details>
+
+    <details class="qa" data-q="active"><summary><span class="qa-q">Pourquoi <code>mode active</code> et pas <code>passive</code> ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">En mode actif, le switch émet des messages LACP pour former l'agrégation. Deux extrémités en passif ne négocieraient jamais. Actif des deux côtés garantit la formation du faisceau.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Dossier 2.5</span></div></div></details>
+
+    <details class="qa" data-q="v"><summary><span class="qa-q">Quelle différence entre LACP et votre topologie en V ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">L'agrégation regroupe des câbles parallèles vers le même équipement : elle protège contre la rupture d'un câble. La topologie en V donne à chaque switch d'accès un câble vers chacune des deux distributions : elle protège contre la panne d'un équipement entier.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Le V est entre les switchs d'accès et les distributions, pas entre les distributions et le Core. Et c'est le Spanning Tree (niveau 2) qui bascule, pas OSPF.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 14 ; cours ciblé, partie 0</span></div></div></details>
+
+    <details class="qa" data-q="lacp-charge"><summary><span class="qa-q">Comment la charge se répartit-elle entre vos quatre câbles agrégés ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Par conversation : chaque flux emprunte un câble choisi par un calcul sur les adresses. Avec peu de flux, comme dans une démonstration, un seul câble peut tout porter.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+
+    <details class="qa" data-q="distri-vlan"><summary><span class="qa-q">À quoi servent les interfaces VLAN de vos distributions ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">À les administrer à distance. Chacune porte une adresse d'administration dans le VLAN 10, avec une passerelle par défaut vers le cœur. C'est justement ce que ma deuxième préconisation propose de déplacer dans un VLAN dédié.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>Les trajets et les serveurs</h3>
+    <details class="qa" data-q="trajet-service"><summary><span class="qa-q">Un poste de la Finance joint un poste de la Direction. Racontez-moi le trajet.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Le poste constate que la destination n'est pas dans son réseau, il remet donc le paquet à sa passerelle, qui est l'interface virtuelle de son VLAN sur le switch de cœur. Le switch consulte sa table, voit que le réseau de la Direction est directement connecté via une autre de ses interfaces virtuelles, et fait ressortir le paquet par là. Aucun routeur n'intervient : tout se passe à l'intérieur du switch de cœur.</p>
+      <p class="note">Les adresses IP source et destination ne changent jamais. L'étiquette et les adresses matérielles sont retirées et remplacées à chaque étape.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 15</span></div></div></details>
+
+    <details class="qa" data-q="trajet-web"><summary><span class="qa-q">Un poste de la Finance ouvre le site. Que se passe-t-il ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Ce seul test valide quatre briques à la fois : la résolution du nom par mon serveur DNS, le routage entre VLAN par mon switch de cœur, le routage entre sites par OSPF, et la réponse du serveur web. Au passage, la traduction surchargée du siège s'applique, comme à tout trafic qui quitte le siège. Ce que je n'ai pas, c'est la traduction statique du bâtiment Vert, que j'ai retirée.</p>
+      <p class="note">Le Core ne connaît pas le segment du serveur web : il applique sa route par défaut <code>ip route 0.0.0.0 0.0.0.0 192.168.99.1</code>. Le parcours détaillé est sur la page <a href="trajet.html">Trajet de la trame</a>.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 16</span></div></div></details>
+
+    <details class="qa" data-q="web-ou"><summary><span class="qa-q">Le serveur web, il est accessible depuis où exactement ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Depuis tous les VLAN du siège, et depuis les deux autres bâtiments par le routage. Sur cette maquette, l'extérieur ce sont les autres bâtiments, il n'y a pas d'Internet réel.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Script, discussion Q6</span></div></div></details>
+
+    <details class="qa" data-q="deux-noms"><summary><span class="qa-q">Pourquoi deux noms de domaine, dont un pour l'IPv6 ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Un nom porte l'enregistrement A, pour l'IPv4, l'autre l'enregistrement AAAA, pour l'IPv6. J'ai séparé les deux pour tester chaque version indépendamment, Packet Tracer gérant mal deux types d'enregistrement sur un même nom. Sur un serveur réel, un même nom porterait les deux, et le client choisirait.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9, dossier 2.8</span></div></div></details>
+
+    <details class="qa" data-q="services"><summary><span class="qa-q">Quels services tournent sur vos serveurs ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">J'ai constaté que mes deux serveurs ont aussi les services FTP, TFTP et Syslog activés par défaut. Ils ne servent à rien dans mon architecture. Les désactiver relève du principe de réduction de la surface d'attaque : un serveur ne doit faire tourner que les services nécessaires à sa fonction, parce que chaque service en écoute est un point d'entrée potentiel.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 17</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>IPv6</h3>
+    <details class="qa" data-q="v6-pourquoi"><summary><span class="qa-q">Pourquoi avez-vous fait de l'IPv6 ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Le plan d'action précise que l'adresse du site fournie par le fournisseur d'accès est en IPv6. J'ai donc construit une infrastructure en double pile, avec une adresse IPv4 et une adresse IPv6 sur chaque équipement.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Le double adressage ne sert pas à « avoir deux chemins » : ce sont deux versions du protocole.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9</span></div></div></details>
+
+    <details class="qa" data-q="v6-64"><summary><span class="qa-q">Que signifie /64, et pourquoi pas un /127 sur vos liaisons ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Les 64 premiers bits forment le préfixe, qui désigne le réseau, et les 64 derniers l'identifiant de la machine. C'est la taille standard d'un réseau IPv6, requise notamment par l'autoconfiguration. Un /127 est possible sur les liaisons ; j'ai choisi un /64 partout pour garder un plan uniforme, puisqu'en IPv6 l'économie d'adresses n'a pas de sens.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9</span></div></div></details>
+
+    <details class="qa" data-q="v6-48"><summary><span class="qa-q">On vous a fourni un /64, et vous avez quatorze réseaux ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">La norme veut un /64 par réseau. J'ai numéroté mes réseaux dans le quatrième groupe, ce qui revient à travailler dans 2001:0:CAFE::/48. En production, je demanderais un /48 au fournisseur d'accès, ce qui est la pratique courante.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9</span></div></div></details>
+
+    <details class="qa" data-q="v6-forme"><summary><span class="qa-q">Écrivez la forme complète de 2001:0:CAFE:10::1.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">2001:0000:CAFE:0010:0000:0000:0000:0001. On voit cinq groupes, le :: en cache trois. On supprime les zéros en tête de chaque groupe, jamais ceux de droite, et on ne remplace qu'une seule suite de groupes nuls par ::.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9</span></div></div></details>
+
+    <details class="qa" data-q="v6-ll"><summary><span class="qa-q">Quelle différence entre une adresse globale et une lien-local ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">La globale est routable partout. La lien-local, en FE80, n'est valable que sur son câble et n'est jamais routée : elle sert au dialogue entre voisins, comme OSPF, et de passerelle aux postes. Elle n'a besoin d'être unique que sur son câble, d'où FE80::1 sur plusieurs interfaces sans conflit.</p>
+      <p class="note"><span class="lbl trap">Piège</span>La lien-local n'est pas « pour le réseau privé ».</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9</span></div></div></details>
+
+    <details class="qa" data-q="v6-slaac"><summary><span class="qa-q">Comment vos postes obtiennent-ils leur adresse IPv6 ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Par autoconfiguration sans état. Le switch de cœur annonce le préfixe, chaque poste fabrique son identifiant. Aucun serveur DHCPv6 n'est nécessaire, et personne ne tient de registre. Le poste retient comme passerelle l'adresse FE80 depuis laquelle le routeur s'annonce.</p>
+      <p class="note">Le poste des Commerciaux a reçu <code>FE80::201:63FF:FE46:6005</code> au lieu de <code>FE80::1</code>, parce que Vlan50 porte <code>ipv6 enable</code> : « le résultat est équivalent, mais par cohérence je l'alignerais sur les cinq autres ».</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9, Cours définitif partie 17</span></div></div></details>
+
+    <details class="qa" data-q="v6-ospf"><summary><span class="qa-q">Le switch de cœur participe-t-il à OSPF en IPv6 ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Ses interfaces virtuelles ont le protocole activé, mais pas son port vers le routeur. Il n'a donc aucun voisin. Les réseaux du siège sont propagés par les routes statiques du routeur, redistribuées, exactement comme en IPv4.</p>
+      <p class="note">OSPF version 3 s'active sur chaque interface, au lieu de déclarer les réseaux dans le processus. Les identifiants 1.1.1.1, 2.2.2.2 et 3.3.3.3 ne concernent que ce processus IPv6.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9, Cours définitif partie 5</span></div></div></details>
+
+    <details class="qa" data-q="v6-nat"><summary><span class="qa-q">Votre NAT traduit-il l'IPv6 ? Tous vos postes ont-ils une adresse IPv6 ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Non, ma traduction surchargée ne concerne que l'IPv4 : en IPv6, chaque poste a une adresse globale et communique sans traduction. Les cinq postes du siège ont une adresse IPv6 par autoconfiguration. Les trois postes satellites n'ont que leur lien-local : leur autoconfiguration est désactivée, il suffit de l'activer, leurs routeurs annonçant déjà leurs préfixes.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9</span></div></div></details>
+
+    <details class="qa" data-q="v6-ext"><summary><span class="qa-q">Votre serveur web est-il accessible en IPv6 depuis l'extérieur du siège ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Pas depuis mes postes satellites, qui n'ont pas d'adresse IPv6 globale. En activant l'autoconfiguration IPv6 sur le PC ACCUEIL, le routeur Bleu lui en fournirait une, et OSPFv3 connaît déjà le chemin jusqu'au serveur.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+  </div>
+
+  <div class="qgroup"><h3>Sécurité et recul</h3>
+    <details class="qa" data-q="precos"><summary><span class="qa-q">Citez-moi vos préconisations, et le risque que chacune traite.</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Trois mesures, trois portes d'entrée. Le réseau avec le chiffrement : SSHv2 contre le vol d'identifiants. L'infrastructure avec le VLAN d'administration : contre la latéralisation d'une attaque. Le physique avec le Port Security : contre l'intrusion physique. Ces trois mesures ne coûtent aucun matériel supplémentaire, ce sont uniquement des durcissements de configuration.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Toujours le risque avant la mesure. Ne les récite pas, montre-les : DISTRI-GAUCHE pour la deuxième, SW-SHOWROOM pour la troisième.</p>
+      <p class="note"><b>D'où viennent-elles ?</b> Du Guide d'hygiène informatique de l'ANSSI : mesure 21 pour les protocoles sécurisés, mesure 28 pour le réseau d'administration dédié, mesure 26 pour restreindre les prises réseau des zones ouvertes au public.</p>
+      <p class="note"><b>Pourquoi filtrer le VLAN 99 sur le cœur et pas sur le routeur ?</b> Parce que le trafic entre VLAN ne passe jamais par le routeur : c'est le switch de cœur qui le route.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 18</span></div></div></details>
+
+    <details class="qa" data-q="defauts"><summary><span class="qa-q">Qu'est-ce qui ne va pas dans votre réseau ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Trois choses. D'abord mon serveur web est un point unique de défaillance : un seul serveur, un seul switch, un seul lien, et aucun pare-feu devant. Ensuite mon serveur DNS est dans la même situation, et tout le réseau en dépend pour la résolution de noms. Enfin mes adresses d'administration sont dans un VLAN utilisateur, ce qui est l'objet de ma deuxième préconisation.</p>
+      <p class="note">Autre angle, si on te parle d'architecture : le switch de cœur et le routeur Rouge sont deux points uniques de défaillance. S'ils tombent, les services ne communiquent plus entre eux, ou le siège est coupé des autres bâtiments. En production, je les doublerais.</p>
+      <p class="note"><span class="lbl trap">Piège</span>Ne réponds jamais « rien ». C'est la question qui départage.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Script, discussion Q9</span></div></div></details>
+
+    <details class="qa" data-q="budget"><summary><span class="qa-q">Si je vous donne du budget, vous faites quoi en premier ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Un pare-feu devant le serveur web, en n'autorisant que les ports 80 et 443 en entrée et surtout en interdisant toute connexion initiée depuis le serveur vers le réseau interne. C'est cette seconde règle qui compte : elle empêche un serveur compromis de servir de tremplin vers le reste de l'entreprise. Ensuite un second serveur DNS dans un autre bâtiment.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Script, discussion Q10</span></div></div></details>
+
+    <details class="qa" data-q="methode"><summary><span class="qa-q">Quelle a été votre méthode de travail ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">J'ai suivi le plan d'action étape par étape, et je vérifiais chaque étape par une commande d'affichage et un test avant de passer à la suivante. C'est ainsi que j'ai trouvé les marquages du NAT manquants, les listes non appliquées sur le cœur, et les passerelles inversées de deux postes.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+
+    <details class="qa" data-q="nouveau-service"><summary><span class="qa-q">Comment ajouteriez-vous un nouveau service ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Je créerais un VLAN, déclaré sur le cœur, les deux distributions et le nouveau switch d'accès, avec un réseau en /24, une interface virtuelle en .1 sur le cœur et un pool DHCP. J'ajouterais une route statique sur le routeur Rouge, en IPv4 et en IPv6, et j'adapterais les listes de filtrage. Les trunks transporteraient le nouveau VLAN sans modification.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Page Trajet, mode Soutenance</span></div></div></details>
+
+    <details class="qa" data-q="eval"><summary><span class="qa-q">Qu'est-ce que le jury évalue réellement ?</span><span class="st"></span></summary><div class="qa-a">
+      <p class="say">Pas ta capacité à réciter une configuration. Ta capacité à expliquer pourquoi tu as fait chaque choix, et ce qui casserait si tu ne l'avais pas fait.</p>
+      <p class="note">Garde ces deux questions en tête pour chaque élément de ta maquette.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 19</span></div></div></details>
+  </div>
+</section>
+
+<!-- =================================================================== CHECKLIST -->
+<section id="checklist" class="tab" aria-labelledby="h-checklist" hidden>
+  <h2 id="h-checklist">Checklist de soutenance</h2>
+  <p class="lede">Une ligne, un élément que tu dois savoir expliquer et démontrer. Les lignes marquées « mis à jour » ont été corrigées d'après le Cours définitif.</p>
+
+  <div class="meter">
+    <div class="bar" aria-hidden="true"><i id="cl-bar"></i></div>
+    <b id="cl-total">0 / 0</b>
+    <span class="reset" id="cl-reset-wrap"><button type="button" class="btn quiet" id="cl-reset">Tout décocher</button></span>
+  </div>
+
+  <div class="cl-group"><h3>1. Adressage <span class="tag">à l'oral</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c11" data-k="c11"><label for="c11">Pourquoi des /30 sur les liaisons WAN (2 adresses utilisables, besoin exact d'un point à point)</label></div>
+    <div class="check"><input type="checkbox" id="c12" data-k="c12"><label for="c12">Pourquoi des /24 en interne (254 adresses, marge d'évolution)</label></div>
+    <div class="check"><input type="checkbox" id="c13" data-k="c13"><label for="c13">Pourquoi le numéro de VLAN se retrouve dans l'adresse (lisibilité)</label></div>
+    <div class="check"><input type="checkbox" id="c14" data-k="c14"><label for="c14">Pourquoi un /64 partout en IPv6 (taille standard, requise par l'autoconfiguration)</label></div>
+    <div class="check"><input type="checkbox" id="c15" data-k="c15"><label for="c15">Pourquoi une adresse globale ET une lien-local sur chaque interface (cahier des charges + rôle du lien-local pour OSPF)</label></div>
+    <div class="check"><input type="checkbox" id="c16" data-k="c16"><label for="c16">Pourquoi le double adressage IPv4/IPv6 (le FAI fournit l'adresse du site en IPv6)</label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>2. Les routes <span class="tag n1">démo 1</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c21" data-k="c21"><label for="c21"><code>show ip ospf neighbor</code> sur un routeur : 2 voisins FULL</label></div>
+    <div class="check"><input type="checkbox" id="c22" data-k="c22"><label for="c22"><code>show ip route</code> : lignes préfixées O</label></div>
+    <div class="check"><input type="checkbox" id="c23" data-k="c23"><label for="c23">Pourquoi OSPF plutôt que du statique (reprise sur panne automatique)</label></div>
+    <div class="check"><input type="checkbox" id="c24" data-k="c24"><label for="c24">Pourquoi le routeur Rouge a AUSSI des routes statiques (les VLAN sont gérés par le Core) + <code>redistribute static</code></label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>3. Les VLAN <span class="tag n1">démo 2</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c31" data-k="c31"><label for="c31"><code>show vlan brief</code> sur le Core : les 6 VLAN actifs (et le 99 MANAGEMENT)</label></div>
+    <div class="check"><input type="checkbox" id="c32" data-k="c32"><label for="c32">Pourquoi des VLAN dans le Rouge et aucun dans le Bleu/Vert (séparation logique contre séparation déjà physique)</label></div>
+    <div class="check"><input type="checkbox" id="c33" data-k="c33"><label for="c33">Comment deux VLAN communiquent (interface virtuelle sur le Core = passerelle, <code>ip routing</code>)</label></div>
+    <div class="check"><input type="checkbox" id="c34" data-k="c34"><label for="c34">Où l'étiquette 802.1Q apparaît (sortie d'un port trunk) et disparaît (sortie d'un port access)</label></div>
+    <div class="check"><input type="checkbox" id="c35" data-k="c35"><label for="c35">Sur chaque switch d'accès : 24 ports en access, Gi0/1 et Gi0/2 en trunk</label></div>
+    <div class="check"><input type="checkbox" id="c36" data-k="c36"><label for="c36">Pourquoi les distributions déclarent les 6 VLAN sans avoir de poste dedans (transit obligatoire)</label></div>
+    <div class="check"><input type="checkbox" id="c37" data-k="c37"><label for="c37">Pourquoi le port du Core vers le routeur Rouge n'est ni access ni trunk (port routé, <code>no switchport</code>)</label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>4. Le DHCP <span class="tag n2">écart au cahier des charges</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c41" data-k="c41"><label for="c41">Où est configuré le service (switch Core, 6 pools)</label></div>
+    <div class="check"><input type="checkbox" id="c42" data-k="c42"><label for="c42">Pourquoi là et pas sur les distributions<span class="why"><span class="tag fix">mis à jour</span>La requête est une diffusion, qui ne franchit pas la frontière d'un VLAN. Le Core a une interface dans chaque VLAN : un seul serveur suffit. Sur les distributions, il faudrait une adresse par VLAN sur chacune et deux serveurs à coordonner.</span></label></div>
+    <div class="check"><input type="checkbox" id="c43" data-k="c43"><label for="c43">IP Configuration d'un poste : DHCP coché + adresse, passerelle, DNS reçus</label></div>
+    <div class="check"><input type="checkbox" id="c44" data-k="c44"><label for="c44"><code>show ip dhcp binding</code> sur le Core : preuve côté serveur</label></div>
+    <div class="check"><input type="checkbox" id="c45" data-k="c45"><label for="c45">À quoi servent les exclusions (.1 à .10 réservés aux équipements fixes)</label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>5. L'accès WAN et le NAT <span class="tag n1">démo 3</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c51" data-k="c51"><label for="c51">Ping depuis PC INFORMATIQUE vers une interface d'un routeur distant<span class="why"><span class="tag fix">mis à jour</span>Depuis ce poste par cohérence avec ta politique (liste 120), pas parce que ça échouerait ailleurs : les listes du Core ne sont pas actives.</span></label></div>
+    <div class="check"><input type="checkbox" id="c52" data-k="c52"><label for="c52"><code>show ip nat translations</code> sur le Rouge : adresses traduites</label></div>
+    <div class="check"><input type="checkbox" id="c53" data-k="c53"><label for="c53">Différence NAT surchargé / statique en une phrase (sortie pour les postes, entrée pour le serveur)</label></div>
+    <div class="check"><input type="checkbox" id="c54" data-k="c54"><label for="c54">Rôle exact de l'ACL 1 dans la règle NAT (désigne les adresses éligibles, ce n'est pas un filtre)</label></div>
+    <div class="check"><input type="checkbox" id="c55" data-k="c55"><label for="c55">Les 3 conditions de déclenchement (inside, outside, liste éligible)</label></div>
+    <div class="check"><input type="checkbox" id="c56" data-k="c56"><label for="c56">Ne jamais couper <code>Serial0/1/0</code> en démo de panne (il porte l'adresse du NAT)</label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>6. Le serveur web <span class="tag n1">démo 4</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c61" data-k="c61"><label for="c61">Navigateur : <code>impactinfluence.com</code> (SANS www) puis <code>impactinfluence6.com</code></label></div>
+    <div class="check"><input type="checkbox" id="c62" data-k="c62"><label for="c62">Les 4 briques validées par ce seul test (DNS, routage inter-VLAN, routage OSPF, réponse HTTP)</label></div>
+    <div class="check"><input type="checkbox" id="c63" data-k="c63"><label for="c63">Pourquoi tester depuis un poste métier<span class="why"><span class="tag fix">mis à jour</span>C'est le cas d'usage réel, un employé qui consulte le site. Ce test ne prouve rien sur le filtrage : les listes du Core ne sont pas actives.</span></label></div>
+    <div class="check"><input type="checkbox" id="c64" data-k="c64"><label for="c64">Le NAT sur ce trajet<span class="why"><span class="tag fix">mis à jour</span>L'ancienne checklist disait « aucun NAT ». Faux : le NAT surchargé du siège s'applique, comme à tout ce qui quitte le siège. Seul le NAT statique du Vert n'existe pas.</span></label></div>
+    <div class="check"><input type="checkbox" id="c65" data-k="c65"><label for="c65">Pourquoi le NAT statique prévu au plan d'action a été retiré (mécanisme + raisonnement)</label></div>
+    <div class="check"><input type="checkbox" id="c66" data-k="c66"><label for="c66">Pourquoi 2 noms DNS différents (limite du simulateur sur A et AAAA sur un même nom)</label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>7. Le load-balancing <span class="tag n1">démo 5</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c71" data-k="c71"><label for="c71"><code>show etherchannel summary</code> sur LES DEUX distributions : Po1(SU), 4 ports (P)</label></div>
+    <div class="check"><input type="checkbox" id="c72" data-k="c72"><label for="c72">Pourquoi 4 câbles seraient un problème sans LACP (boucles, 3 bloqués par le Spanning Tree)</label></div>
+    <div class="check"><input type="checkbox" id="c73" data-k="c73"><label for="c73">Pourquoi le mode <code>active</code> (deux passifs ne se parleraient jamais)</label></div>
+    <div class="check"><input type="checkbox" id="c74" data-k="c74"><label for="c74">Différence LACP / topologie en V (câbles parallèles vers le même équipement / un câble vers chacun de deux équipements)</label></div>
+    <div class="check"><input type="checkbox" id="c75" data-k="c75"><label for="c75">Ce qui se passe si une distribution tombe (bascule sur l'autre par le Spanning Tree)</label></div>
+    <div class="check"><input type="checkbox" id="c76" data-k="c76"><label for="c76">Pourquoi les deux distributions doivent être identiques (paire redondante : 3 différences sur 157 lignes)</label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>8. Le filtrage <span class="tag n1">démo 6</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c81" data-k="c81"><label for="c81"><code>show access-lists</code> sur le Core : listes 110 et 120</label></div>
+    <div class="check"><input type="checkbox" id="c82" data-k="c82"><label for="c82">Ce qu'autorise la liste 110 (Informatique vers tout)</label></div>
+    <div class="check"><input type="checkbox" id="c83" data-k="c83"><label for="c83">Ce qu'autorise la liste 120 (les 4 services métier vers les serveurs et entre eux)</label></div>
+    <div class="check"><input type="checkbox" id="c84" data-k="c84"><label for="c84">Le principe du moindre privilège en une phrase</label></div>
+    <div class="check"><input type="checkbox" id="c85" data-k="c85"><label for="c85">Pourquoi aucune règle de blocage écrite (interdiction implicite de fin de liste)</label></div>
+    <div class="check"><input type="checkbox" id="c86" data-k="c86"><label for="c86"><code>show ip interface vlan 40</code> : « Inbound access list is not set ». <b>L'annoncer soi-même.</b></label></div>
+    <div class="check"><input type="checkbox" id="c87" data-k="c87"><label for="c87">La phrase exacte sur la limite du simulateur (acceptée mais pas implémentée sur les interfaces virtuelles)</label></div>
+    <div class="check"><input type="checkbox" id="c8c" data-k="c8c"><label for="c8c">Les trois corrections que les listes demanderaient avant d'être appliquées<span class="why"><span class="tag fix">nouveau</span>Telles quelles, elles bloqueraient les réponses vers l'Informatique, les pings vers les routeurs (étape 3) et les demandes DHCP.</span></label></div>
+    <div class="check"><input type="checkbox" id="c88" data-k="c88"><label for="c88">Démo de remplacement : <code>show ip interface Serial0/1/0</code> sur le Rouge : liste 100 active</label></div>
+    <div class="check"><input type="checkbox" id="c89" data-k="c89"><label for="c89">Pourquoi la liste 100 est sur le routeur et pas sur le Core (frontière physique interne/externe)</label></div>
+    <div class="check"><input type="checkbox" id="c8a" data-k="c8a"><label for="c8a">Test réel depuis PC ACCUEIL corrigé : le nom échoue, <code>192.168.90.80</code> répond, le compteur deny augmente</label></div>
+    <div class="check"><input type="checkbox" id="c8b" data-k="c8b"><label for="c8b">La nuance : filtrage de service (port 53), pas blocage de l'hôte<span class="why"><span class="tag fix">mis à jour</span>Ne l'illustre pas par un ping du Bleu vers le serveur DNS : la réponse serait traduite par le NAT, le résultat ne prouverait rien.</span></label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>9. Les préconisations <span class="tag n1">livrable 3</span><span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="c91" data-k="c91"><label for="c91">Préco 1, administration chiffrée : risque = vol d'identifiants</label></div>
+    <div class="check"><input type="checkbox" id="c92" data-k="c92"><label for="c92">Préco 2, VLAN d'administration : risque = latéralisation, et montrer l'adresse d'admin actuelle dans le VLAN 10<span class="why"><span class="tag fix">mis à jour</span>Le VLAN 99 MANAGEMENT existe sur le Core, pas encore sur les distributions : il faudra l'y déclarer.</span></label></div>
+    <div class="check"><input type="checkbox" id="c93" data-k="c93"><label for="c93">Préco 3, verrouillage des ports : risque = intrusion physique, et montrer les 24 ports du showroom sans protection</label></div>
+    <div class="check"><input type="checkbox" id="c94" data-k="c94"><label for="c94">L'argument transversal (aucun coût matériel, uniquement de la configuration)</label></div>
+    <div class="check"><input type="checkbox" id="c95" data-k="c95"><label for="c95">La source : Guide d'hygiène de l'ANSSI, mesures 21, 28 et 26<span class="why"><span class="tag fix">nouveau</span>Et les corrections à dire : clé SSH d'au moins 2048 bits, filtrage du VLAN 99 sur le cœur et pas sur le routeur.</span></label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>10. Les trois histoires <span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="ca1" data-k="ca1"><label for="ca1">Le NAT statique retiré (testé, cassait l'objectif, retiré en connaissance de cause)</label></div>
+    <div class="check"><input type="checkbox" id="ca2" data-k="ca2"><label for="ca2">La limite du simulateur sur les ACL (diagnostiquée, pas une erreur de conception)</label></div>
+    <div class="check"><input type="checkbox" id="ca3" data-k="ca3"><label for="ca3">Les passerelles croisées des postes Accueil et Showroom, trouvées en repassant le livrable</label></div>
+  </div></div>
+
+  <div class="cl-group"><h3>11. Les trois phrases de posture <span class="count"></span></h3><div class="stack">
+    <div class="check"><input type="checkbox" id="cb1" data-k="cb1"><label for="cb1">« Je ne sais pas, mais voici comment je le vérifierais »</label></div>
+    <div class="check"><input type="checkbox" id="cb2" data-k="cb2"><label for="cb2">« Le simulateur a une latence, je vous montre la capture de validation »</label></div>
+    <div class="check"><input type="checkbox" id="cb3" data-k="cb3"><label for="cb3">« Je l'ai identifié en repassant ma maquette, voici ce que j'en ai conclu »</label></div>
+  </div></div>
+</section>
+
+<!-- =================================================================== PIÈGES -->
+<section id="pieges" class="tab" aria-labelledby="h-pieges" hidden>
+  <h2 id="h-pieges">Ce qu'il ne faut pas dire</h2>
+  <p class="lede">Des phrases venues d'anciens documents ou de tes annotations. Dites telles quelles, un jury technique les relèverait, et le doute s'étendrait au reste.</p>
+
+  <h3 style="margin-top:0">Les gestes interdits</h3>
+  <ul class="never" style="padding:0;margin-top:12px">
+    <li>Couper <code>Serial0/1/0</code> en démo de panne : elle porte l'adresse du NAT. Coupe <code>Serial0/1/1</code>.</li>
+    <li>Taper <code>www.impactinfluence.com</code> : ce nom n'existe pas.</li>
+    <li>Pinguer <code>8.8.8.8</code> ou une adresse d'Internet : il n'y en a pas sur la maquette.</li>
+    <li>Répondre « rien » à « qu'est-ce qui ne va pas dans votre réseau ? ».</li>
+    <li>Bluffer une réponse.</li>
+    <li>Chercher une panne devant le jury au lieu de passer à la suite.</li>
+    <li>Annoncer un blocage que l'écran va contredire (Finance → site web, Finance → Informatique).</li>
+    <li>Laisser le silence s'installer après l'aveu sur les ACL.</li>
+    <li>Placer le NAT sur le routeur de l'accueil : le Bleu n'a aucun NAT, il est sur le routeur Rouge.</li>
+    <li>Dire « priorité 4096 », « VLAN 99 inexistant » ou « aucun NAT vers le serveur web ».</li>
+  </ul>
+
+  <h3>Les phrases fausses, et ce qui est vrai</h3>
+  <div class="mt">
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le port du Core vers le routeur est routé car il y a des règles ACL.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Il est routé parce que c'est une liaison entre deux équipements de routage, sans VLAN à transporter. Rien à voir avec les ACL.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>L'adresse link-local est pour le réseau privé.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Elle n'est valable que sur un seul segment et n'est jamais routée, même en privé. Elle sert aux protocoles de voisinage comme OSPF, et de passerelle aux postes.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le double adressage sert à avoir deux chemins possibles.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Il sert parce que le FAI fournit l'adresse du site en IPv6. Deux versions du protocole, pas deux chemins.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Mes deux distributions se partagent les passerelles, et le survivant récupère tout en cas de panne.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Les distributions n'ont pas <code>ip routing</code> (et portent <code>ip default-gateway</code>, réservé aux équipements qui ne routent pas). Toutes les passerelles sont sur le Core. Les « passerelles croisées » désignent l'erreur de saisie des postes Accueil et Showroom.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>La topologie en V est entre les distributions et le Core, et c'est OSPF qui surveille les liens.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Le V relie chaque switch d'accès aux deux distributions. Au niveau 2, c'est le Spanning Tree qui bloque un lien et le débloque en cas de panne. OSPF travaille entre les routeurs.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Une route statique vers le Core allège la table du routeur Rouge.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>C'est l'inverse : le routeur doit connaître les VLAN pour les annoncer au Bleu et au Vert. Six routes en IPv4, six en IPv6, et <code>redistribute static</code> qui les injecte dans OSPF.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Les routes statiques servent de secours.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Une route statique est fixe, elle ne se réveille pas en cas de panne. Le secours, c'est OSPF.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le NAT surchargé permet aux employés de naviguer sur Internet.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Il n'y a aucun Internet sur la maquette. Le seul extérieur est le WAN privé entre les trois bâtiments. La démo pingue l'interface d'un routeur distant, <code>132.186.32.41</code>.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Aucun NAT n'intervient sur le trajet vers le serveur web.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>La liste 1 couvre tout 192.168.0.0/16 : tout trafic qui quitte le siège par une liaison série est traduit derrière 132.186.32.33. Seul le NAT statique du Vert n'existe pas.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le test du site web depuis la Finance prouve que le filtrage laisse passer les flux autorisés.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Les listes du Core ne sont pas actives : ce test ne prouve rien sur elles. Il valide quatre briques : DNS, routage inter-VLAN, routage OSPF, réponse HTTP.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>« Destination host unreachable » depuis la Finance prouve que l'ACL bloque.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Aucune ACL n'était active. Le message voulait dire que le Core ne trouvait personne à l'adresse testée. Relève l'adresse réelle du poste avec <code>ipconfig</code> avant tout test.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Un ping du Bleu vers le serveur DNS qui réussit montre que je filtre le port 53 et pas l'hôte.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>La réponse du serveur serait elle-même traduite par le NAT en quittant le siège : le résultat ne prouve rien sur la liste. La preuve, c'est le compteur de la ligne <code>deny</code> dans <code>show access-lists</code>.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le VLAN 99 n'existe pas.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Il existe sur le Core et s'appelle MANAGEMENT : la base VLAN est dans <code>vlan.dat</code>, pas dans la running-config. Il n'est pas encore déclaré sur les distributions. Vérifie avec <code>show vlan brief</code>.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>J'ai forcé le Core comme racine du Spanning Tree avec une priorité de 4096.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Aucune commande de priorité dans la configuration. La racine est élue automatiquement ; la forcer serait l'amélioration naturelle.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le router-id 1.1.1.1 identifie le Rouge dans OSPF.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>1.1.1.1, 2.2.2.2 et 3.3.3.3 sont dans le processus IPv6 uniquement. En IPv4, l'identifiant a été élu sur la plus haute adresse : 192.168.99.1 pour le Rouge.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le DHCP est sur le routeur Core.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>C'est un switch de cœur, un commutateur multicouche. C'est <code>ip routing</code> qui lui donne sa capacité de routage.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le /30 sert à sécuriser les liaisons.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Il sert uniquement à ne pas gaspiller d'adresses sur une liaison qui ne relie que deux équipements.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Une liaison entre sites exige des adresses publiques.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Elle fonctionne parfaitement en privé. Tu utilises un bloc public parce que le cahier des charges te l'a alloué.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Mon préfixe IPv6 est en 2001:DB8, mes réseaux en 10.10.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Exemples d'un ancien cours. Ton bloc IPv6 est <code>2001:0:CAFE::/64</code> et tes segments internes sont en <code>192.168.x.0</code>.</p></div></div>
+  </div>
+
+  <h3>Les documents dépassés</h3>
+  <p class="small" style="margin-top:6px;max-width:var(--measure)">Tes documents ont été corrigés au fil des vérifications. Si tu relis un ancien, voici ce qui n'est plus vrai.</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Document</th><th>Ce qui n'est plus valable</th></tr></thead>
+      <tbody>
+        <tr><td>Protocole de test</td><td>Étape 0.1 (appliquer les ACL : sans effet sur ce modèle), étape 0.3 (remettre le NAT statique : retiré volontairement), preuve 6 (Finance ne joint pas l'Informatique : le ping réussirait).</td></tr>
+        <tr><td>Guide de soutenance (audio)</td><td>Le « bon test » Finance → Informatique, même raison.</td></tr>
+        <tr><td>Script de soutenance</td><td>Démo 4 : « je prouve que le filtrage laisse passer ». Corrigé dans l'onglet Chrono.</td></tr>
+        <tr><td>Checklist d'origine</td><td>« Aucun NAT sur le trajet du serveur web ». Corrigé dans l'onglet Checklist.</td></tr>
+        <tr><td>Vérification de la maquette</td><td>« Le VLAN 99 n'existe pas » : corrigé par la vérification du guide des 19 équipements.</td></tr>
+        <tr><td>Cours définitif</td><td>POOL-GENERAL présenté comme un pool de repli : la page Trajet, plus récente, dit qu'il ne sert à rien et que tu le supprimerais. Pour le DHCP, l'argument « il aurait fallu des relais » est remplacé par « une adresse par VLAN sur chaque distribution et deux serveurs à coordonner ».</td></tr>
+        <tr><td>Document de préconisations</td><td>Clé SSH de 1024 bits (il en faut au moins 2048) ; filtrage du VLAN 99 placé sur le routeur (il se place sur le cœur).</td></tr>
+        <tr><td>Dossier de justification FINAL</td><td>« VLAN 99 sans nom » (il s'appelle MANAGEMENT). Partie 0.4 : le test DNS depuis le Bleu n'était pas valide, à refaire après correction des postes.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- =================================================================== MAQUETTE -->
+<section id="maquette" class="tab" aria-labelledby="h-maquette" hidden>
+  <h2 id="h-maquette">La maquette, en référence</h2>
+  <p class="lede">Les valeurs extraites du fichier Packet Tracer et vérifiées. À garder ouvert à côté du simulateur.</p>
+
+  <div class="kv">
+    <div><b>26</b><span>équipements</span></div>
+    <div><b>36</b><span>liens physiques</span></div>
+    <div><b>3</b><span>liaisons série en triangle</span></div>
+    <div><b>4</b><span>câbles LACP entre distributions</span></div>
+    <div><b>12</b><span>liens accès → distributions (le V)</span></div>
+    <div><b>14</b><span>liens vers postes et serveurs</span></div>
+  </div>
+
+  <h3>Le WAN</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Liaison</th><th>Sous-réseau</th><th>Adresses</th><th>IPv6</th><th>Horloge (DCE)</th></tr></thead>
+      <tbody>
+        <tr><td><span class="b b-rouge">Rouge</span> Se0/1/0 ↔ <span class="b b-bleu">Bleu</span> Se0/1/0</td><td class="mono">132.186.32.32/30</td><td class="mono">.33 / .34</td><td class="mono">2001:0:CAFE:A::1 / ::2</td><td>Rouge</td></tr>
+        <tr><td><span class="b b-bleu">Bleu</span> Se0/1/1 ↔ <span class="b b-vert">Vert</span> Se0/1/0</td><td class="mono">132.186.32.36/30</td><td class="mono">.37 / .38</td><td class="mono">2001:0:CAFE:B::1 / ::2</td><td>Bleu</td></tr>
+        <tr><td><span class="b b-rouge">Rouge</span> Se0/1/1 ↔ <span class="b b-vert">Vert</span> Se0/1/1</td><td class="mono">132.186.32.40/30</td><td class="mono">.42 / .41</td><td class="mono">2001:0:CAFE:C::2 / ::1</td><td>Rouge</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small mt" style="max-width:var(--measure)">Bloc alloué <code>132.186.32.32/27</code> : 12 adresses consommées sur 32, il en reste 20. <code>clock rate 2000000</code>. Lien-local <code>FE80::1</code> (Rouge), <code>::2</code> (Bleu), <code>::3</code> (Vert). Router-id OSPF : 1.1.1.1, 2.2.2.2, 3.3.3.3 en IPv6 seulement ; en IPv4, élus 192.168.99.1, 192.168.70.254, 192.168.90.254.</p>
+
+  <h3>Les routeurs</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Routeur</th><th>Interface</th><th>IPv4</th><th>IPv6</th><th>Vers</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="3"><span class="b b-rouge">Rouge</span></td><td class="mono">Gi0/0/0</td><td class="mono">192.168.99.1/30</td><td class="mono">2001:0:CAFE:F::1/64</td><td>CORE-L3 (NAT inside)</td></tr>
+        <tr><td class="mono">Se0/1/0</td><td class="mono">132.186.32.33/30</td><td class="mono">2001:0:CAFE:A::1/64</td><td>Bleu (NAT outside, ACL 100 in)</td></tr>
+        <tr><td class="mono">Se0/1/1</td><td class="mono">132.186.32.42/30</td><td class="mono">2001:0:CAFE:C::2/64</td><td>Vert (NAT outside, ACL 100 in)</td></tr>
+        <tr><td rowspan="4"><span class="b b-bleu">Bleu</span></td><td class="mono">Gi0/0/0</td><td class="mono">192.168.60.254/24</td><td class="mono">2001:0:CAFE:60::254/64</td><td>SW-ACCUEIL</td></tr>
+        <tr><td class="mono">Gi0/0/1</td><td class="mono">192.168.70.254/24</td><td class="mono">2001:0:CAFE:70::254/64</td><td>SW-SHOWROOM</td></tr>
+        <tr><td class="mono">Se0/1/0</td><td class="mono">132.186.32.34/30</td><td class="mono">2001:0:CAFE:A::2/64</td><td>Rouge</td></tr>
+        <tr><td class="mono">Se0/1/1</td><td class="mono">132.186.32.37/30</td><td class="mono">2001:0:CAFE:B::1/64</td><td>Vert</td></tr>
+        <tr><td rowspan="4"><span class="b b-vert">Vert</span></td><td class="mono">Gi0/0/0</td><td class="mono">192.168.90.254/24</td><td class="mono">2001:0:CAFE:90::254/64</td><td>SW-WEB</td></tr>
+        <tr><td class="mono">Gi0/0/1</td><td class="mono">192.168.80.254/24</td><td class="mono">2001:0:CAFE:80::254/64</td><td>SW-REUNION</td></tr>
+        <tr><td class="mono">Se0/1/0</td><td class="mono">132.186.32.38/30</td><td class="mono">2001:0:CAFE:B::2/64</td><td>Bleu</td></tr>
+        <tr><td class="mono">Se0/1/1</td><td class="mono">132.186.32.41/30</td><td class="mono">2001:0:CAFE:C::1/64</td><td>Rouge (aucun NAT sur le Vert)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>CORE-L3 et les VLAN du siège</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>VLAN</th><th>Nom</th><th>Réseau</th><th>Passerelle</th><th>IPv6</th><th>Switch d'accès</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">10</td><td>Informatique</td><td class="mono">192.168.10.0/24</td><td class="mono">.10.1</td><td class="mono">2001:0:CAFE:10::1/64</td><td>SW-INFO</td></tr>
+        <tr><td class="mono">20</td><td>RH</td><td class="mono">192.168.20.0/24</td><td class="mono">.20.1</td><td class="mono">2001:0:CAFE:20::1/64</td><td>SW-RH</td></tr>
+        <tr><td class="mono">30</td><td>Direction</td><td class="mono">192.168.30.0/24</td><td class="mono">.30.1</td><td class="mono">2001:0:CAFE:30::1/64</td><td>SW-DIRECTION</td></tr>
+        <tr><td class="mono">40</td><td>Finance</td><td class="mono">192.168.40.0/24</td><td class="mono">.40.1</td><td class="mono">2001:0:CAFE:40::1/64</td><td>SW-FINANCE</td></tr>
+        <tr><td class="mono">50</td><td>Commercial</td><td class="mono">192.168.50.0/24</td><td class="mono">.50.1</td><td class="mono">2001:0:CAFE:50::1/64 <span class="small">(ipv6 enable)</span></td><td>SW-COM</td></tr>
+        <tr><td class="mono">99</td><td>MANAGEMENT</td><td colspan="3" class="small">déclaré dans la base du Core, sans interface ni adresse ; absent des distributions</td><td>—</td></tr>
+        <tr><td class="mono">100</td><td>Serveurs</td><td class="mono">192.168.100.0/24</td><td class="mono">.100.1</td><td class="mono">2001:0:CAFE:100::1/64</td><td>SW-DNS</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="dash mt">
+    <li><code>ip routing</code> et <code>ipv6 unicast-routing</code>, <code>spanning-tree mode rapid-pvst</code>.</li>
+    <li><code>Gi1/0/1</code> en <code>no switchport</code>, 192.168.99.2/30 et 2001:0:CAFE:F::2/64 : port routé vers le Rouge. <code>Gi1/0/2</code> et <code>Gi1/0/3</code> en trunk vers les distributions.</li>
+    <li>Routes par défaut : <code>ip route 0.0.0.0 0.0.0.0 192.168.99.1</code> et <code>ipv6 route ::/0 2001:0:CAFE:F::1</code>.</li>
+    <li>DHCP : pools INFO, RH, DIRECTION, FINANCE, COMMERCIAL et POOL-GENERAL, <code>dns-server 192.168.100.10</code>, exclusions .1 à .10 sur chaque réseau.</li>
+  </ul>
+
+  <h3>Distributions et accès</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th></th><th>DISTRI-GAUCHE</th><th>DISTRI-DROITE</th></tr></thead>
+      <tbody>
+        <tr><td>Vlan1</td><td class="mono">192.168.1.2/24</td><td class="mono">192.168.1.3/24</td></tr>
+        <tr><td>Vlan10 (description MANAGEMENT)</td><td class="mono">192.168.10.2/24</td><td class="mono">192.168.10.3/24</td></tr>
+        <tr><td>Passerelle</td><td class="mono">ip default-gateway 192.168.10.1</td><td class="mono">ip default-gateway 192.168.10.1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="dash mt">
+    <li>3650-24PS, pas d'<code>ip routing</code>. Gi1/0/1 trunk vers le Core, Gi1/0/2 à Gi1/0/5 en <code>channel-group 1 mode active</code>, Port-channel1 en trunk, Gi1/0/6 à Gi1/0/24 en trunk vers les switchs d'accès. VLAN 10, 20, 30, 40, 50 et 100 déclarés.</li>
+    <li>Six switchs d'accès 2960-24TT : 24 ports en <code>switchport access vlan X</code> avec <code>spanning-tree portfast</code>, Gi0/1 et Gi0/2 en trunk vers les deux distributions. SW-COM porte une ligne <code>switchport mode access</code> en plus.</li>
+    <li>SW-ACCUEIL, SW-SHOWROOM, SW-WEB, SW-REUNION : configuration d'usine, <code>pvst</code>.</li>
+  </ul>
+
+  <h3>Serveurs et postes</h3>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Serveur</th><th>Adresse</th><th>Passerelle</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td>SRV-DNS <span class="b b-rouge">Rouge</span></td><td class="mono">192.168.100.10</td><td class="mono">192.168.100.1</td><td><code>impactinfluence.com</code> A → 192.168.90.80 ; <code>impactinfluence6.com</code> AAAA → 2001:0:CAFE:90::80</td></tr>
+        <tr><td>SRV-WEB <span class="b b-vert">Vert</span></td><td class="mono">192.168.90.80<br>2001:0:CAFE:90::80</td><td class="mono">192.168.90.254</td><td>HTTP, page par défaut de Packet Tracer</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small mt" style="max-width:var(--measure)">Services actifs sur les deux serveurs : HTTP, DNS, FTP, TFTP, Syslog. FTP, TFTP et Syslog ne servent à rien : remarque de durcissement à faire spontanément.</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Poste</th><th>Mode</th><th>Servi par</th><th>Passerelle</th><th>DNS</th></tr></thead>
+      <tbody>
+        <tr><td>INFORMATIQUE</td><td>DHCP</td><td class="mono">192.168.10.1</td><td class="mono">192.168.10.1</td><td class="mono">192.168.100.10</td></tr>
+        <tr><td>RH</td><td>DHCP</td><td class="mono">192.168.20.1</td><td class="mono">192.168.20.1</td><td class="mono">192.168.100.10</td></tr>
+        <tr><td>DIRECTION</td><td>DHCP</td><td class="mono">192.168.30.1</td><td class="mono">192.168.30.1</td><td class="mono">192.168.100.10</td></tr>
+        <tr><td>FINANCE</td><td>DHCP</td><td class="mono">192.168.40.1</td><td class="mono">192.168.40.1</td><td class="mono">192.168.100.10</td></tr>
+        <tr><td>COMMERCIAL</td><td>DHCP</td><td class="mono">192.168.50.1</td><td class="mono">192.168.50.1</td><td class="mono">192.168.100.10</td></tr>
+        <tr><td>ACCUEIL, SHOWROOM, REUNION</td><td>statique</td><td>—</td><td colspan="2"><a href="#jour">à corriger, voir Jour J</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Les configurations clés, au caractère près</h3>
+  <div class="cfg">
+    <div>
+      <p class="cap">CORE-L3, listes de filtrage (écrites, non appliquées)</p>
+      <div class="term"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">CORE-L3</span><span class="where">lignes 196 à 202</span></div><pre><code>access-list 110 permit ip 192.168.10.0 0.0.0.255 any
+access-list 120 permit ip any 192.168.100.0 0.0.0.255
+access-list 120 permit ip any 192.168.90.0 0.0.0.255
+access-list 120 permit ip any 192.168.20.0 0.0.0.255
+access-list 120 permit ip any 192.168.30.0 0.0.0.255
+access-list 120 permit ip any 192.168.40.0 0.0.0.255
+access-list 120 permit ip any 192.168.50.0 0.0.0.255</code></pre></div>
+    </div>
+    <div>
+      <p class="cap">Routeur Rouge, NAT et liste 100 (appliquée)</p>
+      <div class="term"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span></div><pre><code>interface GigabitEthernet0/0/0
+ ip nat inside
+interface Serial0/1/0
+ ip nat outside
+ ip access-group 100 in
+interface Serial0/1/1
+ ip nat outside
+ ip access-group 100 in
+ip nat inside source list 1 interface Serial0/1/0 overload
+access-list 1 permit 192.168.0.0 0.0.255.255
+access-list 100 deny udp any host 192.168.100.10 eq domain
+access-list 100 permit ip any any</code></pre></div>
+    </div>
+    <div>
+      <p class="cap">Routeur Rouge, OSPF et redistribution</p>
+      <div class="term"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span></div><pre><code>router ospf 1
+ log-adjacency-changes
+ redistribute static subnets
+ network 132.186.32.32 0.0.0.3 area 0
+ network 132.186.32.40 0.0.0.3 area 0
+ network 192.168.99.0 0.0.0.3 area 0
+ network 132.186.32.0 0.0.0.255 area 0
+ipv6 router ospf 1
+ router-id 1.1.1.1
+ redistribute static</code></pre></div>
+    </div>
+    <div>
+      <p class="cap">Routeur Rouge, routes statiques vers les VLAN</p>
+      <div class="term"><div class="term-h"><span class="b b-rouge">Rouge</span><span class="dev">Routeur Rouge</span><span class="where">lignes 102 à 116</span></div><pre><code>ip route 192.168.10.0 255.255.255.0 192.168.99.2
+ip route 192.168.20.0 255.255.255.0 192.168.99.2
+ip route 192.168.30.0 255.255.255.0 192.168.99.2
+ip route 192.168.40.0 255.255.255.0 192.168.99.2
+ip route 192.168.50.0 255.255.255.0 192.168.99.2
+ip route 192.168.100.0 255.255.255.0 192.168.99.2
+ipv6 route 2001:0:CAFE:10::/64 2001:0:CAFE:F::2
+ipv6 route 2001:0:CAFE:20::/64 2001:0:CAFE:F::2
+ipv6 route 2001:0:CAFE:30::/64 2001:0:CAFE:F::2
+ipv6 route 2001:0:CAFE:40::/64 2001:0:CAFE:F::2
+ipv6 route 2001:0:CAFE:50::/64 2001:0:CAFE:F::2
+ipv6 route 2001:0:CAFE:100::/64 2001:0:CAFE:F::2</code></pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== DOCUMENTS -->
+<section id="documents" class="tab" aria-labelledby="h-documents" hidden>
+  <h2 id="h-documents">Les documents</h2>
+  <p class="lede">Tes supports, du plus récent au plus ancien. En cas de contradiction, la page Trajet (mode Soutenance), puis le Cours définitif et la vérification du guide des 19 équipements font foi.</p>
+  <p class="fixnote">Les fichiers originaux ne sont pas dans le dépôt GitHub, qui est public. Pour activer ces liens sur ton ordinateur, copie le contenu de ton archive dans un dossier <code>documents/</code> à côté de <code>index.html</code>.</p>
+
+  <h3>La référence à jour</h3>
+  <div class="docs">
+    <div class="doc"><div><h4>Le trajet de la trame, page interactive <span class="tag cur">le plus récent</span></h4><p>Trois modes : les trajets pas à pas, la soutenance partie par partie avec questions et écarts, la trame à la loupe. C'est la version la plus à jour de ta préparation.</p></div><div class="links"><span class="pages">html</span><a href="trajet.html">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Le cours définitif <span class="tag cur">référence</span></h4><p>Dix-neuf parties vérifiées sur la maquette. Pour chacune : la question du jury, le mécanisme, la preuve, la réponse à dire, le piège.</p></div><div class="links"><span class="pages">54 p.</span><a href="documents/Cours_DEFINITIF_Impact_Influence.pdf">clair</a><a href="documents/Cours_DEFINITIF_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>Les 19 équipements de la maquette</h4><p>Une fiche par équipement : rôle, configuration exacte, logique de chaque commande, vérifications, phrase au jury.</p></div><div class="links"><span class="pages">50 p.</span><a href="documents/Guide_19_equipements_Impact_Influence.pdf">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Vérification du guide des 19 équipements <span class="tag cur">dernier rapport</span></h4><p>Corrige le rapport précédent : le VLAN 99 existe et s'appelle MANAGEMENT.</p></div><div class="links"><span class="pages">md</span><a href="documents/verification_guide19.md">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Le trajet complet, PC Finance → serveur web</h4><p>Aller et retour, équipement par équipement : adresses, étiquettes, routes, listes et NAT.</p></div><div class="links"><span class="pages">9 p.</span><a href="documents/Trajet_complet_PC_Finance_serveur_web.pdf">clair</a><a href="documents/Trajet_complet_PC_Finance_serveur_web_MODE_SOMBRE.pdf">sombre</a></div></div>
+  </div>
+
+  <h3>La théorie</h3>
+  <div class="docs">
+    <div class="doc"><div><h4>La théorie de la soutenance</h4><p>Vingt-et-une notions, organisées par la question du jury qui les déclenche. L'édition sombre ajoute une image mentale par notion.</p></div><div class="links"><span class="pages">44 p.</span><a href="documents/Theorie_soutenance_Impact_Influence.pdf">clair</a><a href="documents/Theorie_soutenance_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>La théorie ciblée</h4><p>Quinze chapitres, seulement ce qu'il faut comprendre pour valider.</p></div><div class="links"><span class="pages">35 p.</span><a href="documents/Theorie_ciblee_Impact_Influence.pdf">clair</a><a href="documents/Theorie_ciblee_Impact_Influence_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>Cours ciblé sur tes lacunes</h4><p>Onze parties dans l'ordre de tes priorités. La partie 0 corrige huit affirmations fausses d'un cours précédent.</p></div><div class="links"><span class="pages">29 p.</span><a href="documents/Cours_corrige_lacunes.pdf">clair</a><a href="documents/Cours_corrige_lacunes_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>IPv6 pour débutant</h4><p>Neuf chapitres à partir de zéro, sur les adresses de ta maquette. Le chapitre 9 rassemble les questions techniques du jury.</p></div><div class="links"><span class="pages">39 p.</span><a href="documents/Cours_IPv6_debutant.pdf">clair</a><a href="documents/Cours_IPv6_debutant_MODE_SOMBRE.pdf">sombre</a></div></div>
+  </div>
+
+  <h3>À écouter (synthèse vocale)</h3>
+  <div class="docs">
+    <div class="doc"><div><h4>Le cours définitif, version audio</h4><p>Le même cours en prose, sans tableau ni symbole.</p></div><div class="links"><span class="pages">62 p.</span><a href="documents/Cours_DEFINITIF_AUDIO.pdf">clair</a><a href="documents/Cours_DEFINITIF_AUDIO_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>Les derniers points</h4><p>Les onze notions que tu avais identifiées comme encore floues.</p></div><div class="links"><span class="pages">42 p.</span><a href="documents/Cours_audio_derniers_points.pdf">clair</a><a href="documents/Cours_audio_derniers_points_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>La théorie ciblée, version audio</h4><p>Les quinze chapitres de la théorie ciblée, en prose.</p></div><div class="links"><span class="pages">37 p.</span><a href="documents/Theorie_ciblee_AUDIO.pdf">clair</a><a href="documents/Theorie_ciblee_AUDIO_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>L'essentiel à retenir, v3</h4><p>La distillation des dix-neuf fiches équipement, en audio.</p></div><div class="links"><span class="pages">33 p.</span><a href="documents/Essentiel_audio_Impact_Influence_v3.pdf">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Guide de soutenance, version audio <span class="tag old">ancien</span></h4><p>Sept parties. Contient l'ancien test Finance → Informatique, à ne plus faire.</p></div><div class="links"><span class="pages">16 p.</span><a href="documents/Guide_soutenance_Impact_Influence_speechify.pdf">ouvrir</a></div></div>
+  </div>
+
+  <h3>La préparation de la soutenance</h3>
+  <div class="docs">
+    <div class="doc"><div><h4>Script de soutenance</h4><p>Le texte des 15 minutes, la simulation de discussion et le kit de survie. La démo 4 est corrigée dans l'onglet Chrono.</p></div><div class="links"><span class="pages">md</span><a href="documents/script_soutenance_Impact_Influence.md">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Dossier de justification FINAL</h4><p>Fiches équipement, définitions, conformité au cahier des charges, les dix commandes.</p></div><div class="links"><span class="pages">md</span><a href="documents/dossier_justification_FINAL.md">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Priorités et checklist</h4><p>Les quatre niveaux d'importance et la checklist d'origine.</p></div><div class="links"><span class="pages">md</span><a href="documents/priorites_soutenance.md">priorités</a><a href="documents/checklist_soutenance.md">checklist</a></div></div>
+    <div class="doc"><div><h4>Protocole de test <span class="tag old">ancien</span></h4><p>Étapes de vérification et tests improvisés. Les étapes 0.1, 0.3 et la preuve 6 sont dépassées.</p></div><div class="links"><span class="pages">md</span><a href="documents/protocole_test_maquette_impact_influence.md">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Vérification de la maquette <span class="tag old">remplacé</span></h4><p>Dix-sept affirmations vérifiées. Son point sur le VLAN 99 est faux.</p></div><div class="links"><span class="pages">md</span><a href="documents/verification_maquette.md">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Prompteur de soutenance</h4><p>Les diapositives. Diapos 4 et 6 et kit d'urgence à corriger (<code>8.8.8.8</code>, <code>www</code>).</p></div><div class="links"><span class="pages">pptx</span><span class="small">dans ton archive</span></div></div>
+    <div class="doc"><div><h4>Document de configuration des équipements</h4><p>Ton livrable, version mise à jour, avec la section 5 « Mise à jour de la configuration ».</p></div><div class="links"><span class="pages">docx</span><span class="small">dans ton archive</span></div></div>
+    <div class="doc"><div><h4>Versions antérieures des dossiers</h4><p>Dossier de justification « vérifié » et première version, dossier de soutenance. Remplacés par le dossier FINAL.</p></div><div class="links"><span class="pages">md</span><span class="small">dans ton archive</span></div></div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<footer>
+  <div class="wrap">Contenu tiré de tes supports de révision, aligné sur leurs versions les plus récentes : la page Trajet, le Cours définitif et le dernier rapport de vérification. Les cases cochées et tes notes de questions restent dans ce navigateur, sur cet appareil.</div>
+</footer>
+
+<script>
+(function(){
+  var S = {
+    get: function(k, d){ try { var v = localStorage.getItem('ii:' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function(k, v){ try { localStorage.setItem('ii:' + k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  var header = document.querySelector('.top'), clockBox = document.querySelector('.clock');
+  /* hauteurs des éléments collants, pour que le chrono et le défilement ne passent pas dessous */
+  function measure(){
+    var root = document.documentElement.style;
+    root.setProperty('--head-h', (getComputedStyle(header).position === 'sticky' ? header.offsetHeight : 0) + 'px');
+    if (clockBox.offsetHeight) root.setProperty('--clock-h', clockBox.offsetHeight + 'px');
+  }
+
+  /* ---------- onglets ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('section.tab'));
+  var ids = tabs.map(function(t){ return t.id; });
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a[data-tab]'));
+  function show(id, scroll){
+    if (ids.indexOf(id) < 0) id = 'jour';
+    tabs.forEach(function(t){ t.hidden = t.id !== id; });
+    links.forEach(function(a){
+      if (a.dataset.tab === id) { a.setAttribute('aria-current', 'page'); }
+      else { a.removeAttribute('aria-current'); }
+    });
+    S.set('tab', id);
+    measure();
+    if (scroll) window.scrollTo(0, 0);
+  }
+  function go(id){
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    show(id, true);
+  }
+  document.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (ids.indexOf(id) < 0) return;
+    e.preventDefault();
+    go(id);
+  });
+  window.addEventListener('hashchange', function(){
+    var id = location.hash.slice(1);
+    if (ids.indexOf(id) >= 0) show(id, true);
+  });
+  var first = location.hash.slice(1);
+  show(ids.indexOf(first) >= 0 ? first : S.get('tab', 'jour'), false);
+  /* le fragment choisit un onglet, il ne doit pas faire défiler la page sous l'en-tête */
+  try { history.scrollRestoration = 'manual'; } catch (e) {}
+  window.addEventListener('load', function(){ if (ids.indexOf(location.hash.slice(1)) >= 0) window.scrollTo(0, 0); });
+  window.addEventListener('resize', measure);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+  /* ---------- terminaux : invites et copie ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.term'), function(t){
+    var code = t.querySelector('code');
+    var raw = code.textContent.replace(/^\n+|\n+$/g, '');
+    var p = t.getAttribute('data-prompt');
+    if (p) {
+      code.textContent = '';
+      raw.split('\n').forEach(function(line){
+        var row = document.createElement('span');
+        row.className = 'ln';
+        if (!/^\s/.test(line)) {
+          var pr = document.createElement('span');
+          pr.className = 'pr';
+          pr.textContent = p;
+          row.appendChild(pr);
+        }
+        row.appendChild(document.createTextNode(line));
+        code.appendChild(row);
+      });
+    }
+    var head = t.querySelector('.term-h');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy';
+    btn.textContent = 'Copier';
+    btn.setAttribute('aria-label', 'Copier les commandes');
+    head.appendChild(btn);
+    btn.addEventListener('click', function(){
+      function done(msg){ btn.textContent = msg; setTimeout(function(){ btn.textContent = 'Copier'; }, 1400); }
+      function fallback(){
+        try {
+          var r = document.createRange(); r.selectNodeContents(code);
+          var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+          done('Sélectionné');
+        } catch (e) { done('Copie impossible'); }
+      }
+      try {
+        navigator.clipboard.writeText(raw).then(function(){ done('Copié'); }, fallback);
+      } catch (e) { fallback(); }
+    });
+  });
+
+  /* ---------- cases à cocher ---------- */
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox][data-k]'));
+  var saved = S.get('checks', {});
+  boxes.forEach(function(c){
+    c.checked = !!saved[c.dataset.k];
+    c.addEventListener('change', function(){
+      var s = S.get('checks', {});
+      if (c.checked) s[c.dataset.k] = 1; else delete s[c.dataset.k];
+      S.set('checks', s);
+      progress();
+    });
+  });
+  function progress(){
+    Array.prototype.forEach.call(document.querySelectorAll('.cl-group'), function(g){
+      var bs = g.querySelectorAll('input[type=checkbox]');
+      var n = Array.prototype.filter.call(bs, function(b){ return b.checked; }).length;
+      g.querySelector('.count').textContent = n + ' / ' + bs.length;
+      g.classList.toggle('done', n === bs.length);
+    });
+    var all = document.querySelectorAll('#checklist input[type=checkbox]');
+    var m = Array.prototype.filter.call(all, function(b){ return b.checked; }).length;
+    document.getElementById('cl-total').textContent = m + ' / ' + all.length;
+    document.getElementById('cl-bar').style.width = (all.length ? (m / all.length * 100) : 0) + '%';
+  }
+  progress();
+  var resetWrap = document.getElementById('cl-reset-wrap');
+  function resetIdle(){
+    resetWrap.innerHTML = '<button type="button" class="btn quiet" id="cl-reset">Tout décocher</button>';
+    document.getElementById('cl-reset').addEventListener('click', resetAsk);
+  }
+  function resetAsk(){
+    resetWrap.innerHTML = '<span class="small">Décocher les ' + document.querySelectorAll('#checklist input[type=checkbox]').length + ' lignes ?</span> <button type="button" class="btn" id="cl-yes">Décocher</button> <button type="button" class="btn quiet" id="cl-no">Annuler</button>';
+    document.getElementById('cl-yes').addEventListener('click', function(){
+      var s = S.get('checks', {});
+      Array.prototype.forEach.call(document.querySelectorAll('#checklist input[type=checkbox]'), function(b){ b.checked = false; delete s[b.dataset.k]; });
+      S.set('checks', s); progress(); resetIdle();
+    });
+    document.getElementById('cl-no').addEventListener('click', resetIdle);
+  }
+  document.getElementById('cl-reset').addEventListener('click', resetAsk);
+
+  /* ---------- chrono ---------- */
+  var clock = document.getElementById('clock'), fill = document.getElementById('t-fill');
+  var status = document.getElementById('t-status'), nowLine = document.getElementById('t-now');
+  var startBtn = document.getElementById('t-start'), resetBtn = document.getElementById('t-reset');
+  var segs = Array.prototype.slice.call(document.querySelectorAll('.seg[data-from]'));
+  var running = false, t0 = 0, acc = 0, timer = null, wake = null, lastSeg = null;
+  var follow = document.getElementById('t-follow');
+  follow.checked = S.get('follow', true);
+  follow.addEventListener('change', function(){ S.set('follow', follow.checked); });
+  function elapsed(){ return acc + (running ? Date.now() - t0 : 0); }
+  function mmss(sec){ sec = Math.floor(sec); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
+  function setStatus(cls, txt){ status.className = 'status ' + cls; status.textContent = txt; }
+  function tick(){
+    var sec = elapsed() / 1000;
+    clock.textContent = mmss(sec);
+    fill.style.width = Math.min(sec / 1200, 1) * 100 + '%';
+    var cur = null, next = null;
+    segs.forEach(function(sg, i){
+      var f = +sg.dataset.from, to = +sg.dataset.to;
+      var isNow = sec >= f && sec < to;
+      sg.classList.toggle('is-now', isNow && (running || sec > 0));
+      sg.classList.toggle('is-done', sec >= to);
+      if (isNow) { cur = sg; next = segs[i + 1] || null; }
+    });
+    if (sec === 0) {
+      setStatus('idle', 'Prêt. Fourchette acceptée : 10 à 20 minutes, cible 15.');
+    } else if (sec >= 1200) {
+      setStatus('bad', 'Plus de 20 minutes : en soutenance, la présentation peut être refusée.');
+    } else if (sec >= 1020) {
+      setStatus('warn', 'Plus de 17 minutes à blanc : coupe des phrases, pas des démos.');
+    } else if (sec >= 600) {
+      setStatus('ok', 'Dans la fourchette. Cible : 15:00.');
+    } else if (running) {
+      setStatus('idle', 'En cours. La fourchette acceptée commence à 10:00.');
+    } else {
+      setStatus('warn', 'En pause. Sous 10 minutes, la présentation serait trop courte : ajoute la démo de reprise sur panne.');
+    }
+    if (running && cur && cur !== lastSeg && follow.checked) {
+      measure();
+      cur.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    }
+    lastSeg = cur;
+    if (cur) {
+      var to = +cur.dataset.to;
+      nowLine.innerHTML = '';
+      var a = document.createElement('span'); a.textContent = 'En ce moment : ';
+      var b = document.createElement('b'); b.textContent = cur.dataset.title;
+      var c = document.createElement('span'); c.textContent = ', jusqu\u2019à ' + mmss(to) + (next ? '. Ensuite : ' + next.dataset.title + '.' : '.');
+      nowLine.appendChild(a); nowLine.appendChild(b); nowLine.appendChild(c);
+    } else {
+      nowLine.textContent = sec >= 900 ? 'Script terminé. Tu es dans le temps de la discussion si tu continues.' : '';
+    }
+  }
+  function start(){
+    running = true; t0 = Date.now();
+    startBtn.textContent = 'Pause';
+    timer = setInterval(tick, 250);
+    try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function(w){ wake = w; }, function(){}); } catch (e) {}
+    tick();
+  }
+  function pause(){
+    acc = elapsed(); running = false;
+    clearInterval(timer); timer = null;
+    startBtn.textContent = 'Reprendre';
+    try { if (wake) { wake.release(); wake = null; } } catch (e) {}
+    tick();
+  }
+  startBtn.addEventListener('click', function(){ running ? pause() : start(); });
+  resetBtn.addEventListener('click', function(){
+    if (running) pause();
+    acc = 0; lastSeg = null;
+    startBtn.textContent = 'Démarrer';
+    tick();
+    nowLine.innerHTML = 'Premier passage : <b>Architecture et adressage</b>, jusqu\u2019à 03:00.';
+  });
+
+  /* ---------- questions ---------- */
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.qa[data-q]'));
+  var filterBtns = Array.prototype.slice.call(document.querySelectorAll('[data-filter]'));
+  var filter = 'all';
+  function rating(){ return S.get('qa', {}); }
+  function apply(card, v){
+    card.dataset.state = v || '';
+    Array.prototype.forEach.call(card.querySelectorAll('[data-rate]'), function(b){
+      b.setAttribute('aria-pressed', String(b.dataset.rate === v));
+    });
+  }
+  function counts(){
+    var r = rating(), su = 0, rv = 0;
+    cards.forEach(function(c){ if (r[c.dataset.q] === 'su') su++; else if (r[c.dataset.q] === 'revoir') rv++; });
+    document.getElementById('q-score').textContent = su + ' sues, ' + rv + ' à revoir, sur ' + cards.length;
+  }
+  function applyFilter(){
+    cards.forEach(function(c){
+      var st = c.dataset.state;
+      var vis = filter === 'all' || (filter === 'new' ? !st : st === filter);
+      c.hidden = !vis;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.qgroup'), function(g){
+      g.hidden = !g.querySelector('.qa:not([hidden])');
+    });
+  }
+  var r0 = rating();
+  cards.forEach(function(c){
+    apply(c, r0[c.dataset.q]);
+    Array.prototype.forEach.call(c.querySelectorAll('[data-rate]'), function(b){
+      b.addEventListener('click', function(){
+        var r = rating(), v = b.dataset.rate;
+        if (r[c.dataset.q] === v) delete r[c.dataset.q]; else r[c.dataset.q] = v;
+        S.set('qa', r);
+        apply(c, r[c.dataset.q]);
+        counts();
+      });
+    });
+  });
+  filterBtns.forEach(function(b){
+    b.addEventListener('click', function(){
+      filter = b.dataset.filter;
+      filterBtns.forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      applyFilter();
+    });
+  });
+  document.getElementById('q-rand').addEventListener('click', function(){
+    var pool = cards.filter(function(c){ return !c.hidden && c.dataset.state !== 'su'; });
+    if (!pool.length) pool = cards.filter(function(c){ return !c.hidden; });
+    if (!pool.length) return;
+    cards.forEach(function(c){ c.open = false; });
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    pick.scrollIntoView({ block: 'center' });
+    pick.querySelector('summary').focus();
+  });
+  document.getElementById('q-close').addEventListener('click', function(){ cards.forEach(function(c){ c.open = false; }); });
+  counts();
+  applyFilter();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Supports originaux (PDF, notes, livrable) : gardés hors du dépôt public
+documents/
+*.pdf
+*.docx
+*.pptx
+*.pkt

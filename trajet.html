@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Le trajet de la trame, Impact Influence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F4F6; --panel:#FFFFFF; --ink:#1B2430; --muted:#5B6674; --line:#D5DBE2;
+  --trunk:#2A66AE; --access:#3A8A57; --serial:#D2782A; --plain:#8A94A1; --routed:#5E6B7A;
+  --nat:#7747B0; --acl:#B0582A; --route:#2F7A5A; --l2:#6B7380; --host:#2D7D8C;
+  --hl:#FCE7A6; --hl-ink:#5A4300; --halo:#2A66AE; --pill-ink:#FFFFFF; --bad:#B3261E;
+  --dim:.28;
+  --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#18212B; --panel:#1F2A36; --ink:#E4EAF0; --muted:#9AA7B5; --line:#324150;
+    --trunk:#6FA3E0; --access:#6FC08C; --serial:#EDA15A; --plain:#7F8B99; --routed:#95A3B3;
+    --nat:#B391E0; --acl:#E3935F; --route:#6EC39A; --l2:#A4ADB9; --host:#6CC0CE;
+    --hl:#5A4A12; --hl-ink:#FFE59A; --halo:#6FA3E0; --dim:.3; --pill-ink:#12202B; --bad:#F2867E;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#18212B; --panel:#1F2A36; --ink:#E4EAF0; --muted:#9AA7B5; --line:#324150;
+  --trunk:#6FA3E0; --access:#6FC08C; --serial:#EDA15A; --plain:#7F8B99; --routed:#95A3B3;
+  --nat:#B391E0; --acl:#E3935F; --route:#6EC39A; --l2:#A4ADB9; --host:#6CC0CE;
+  --hl:#5A4A12; --hl-ink:#FFE59A; --halo:#6FA3E0; --dim:.3; --pill-ink:#12202B; --bad:#F2867E;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:var(--font);
+  font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--trunk);outline-offset:2px}
+
+/* ---------- bandeau ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);
+  border-bottom:1px solid var(--line);padding:14px 20px 12px}
+.top h1{margin:0;font-size:1.3rem;line-height:1.25;font-weight:700;letter-spacing:-.005em}
+.top p{margin:2px 0 10px;color:var(--muted);font-size:.95rem}
+.rail{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.leg-name{font-size:.88rem;color:var(--muted);margin-right:2px}
+.dot{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel);
+  font-size:.82rem;font-weight:700;cursor:pointer;display:grid;place-items:center;padding:0}
+.dot[aria-current="step"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.dot.done{border-color:var(--muted)}
+.nav{margin-left:auto;display:flex;gap:8px}
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.35;cursor:default}
+
+/* ---------- mise en page ---------- */
+.stage{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(340px,1fr);gap:0;align-items:start}
+.map{padding:10px 8px 18px 12px}
+.map svg{width:100%;height:auto;display:block;max-height:calc(100vh - var(--top-h,150px) - 30px)}
+.side{border-left:1px solid var(--line);background:var(--panel);min-height:calc(100vh - 110px);
+  padding:22px 24px 40px;position:sticky;top:var(--top-h,150px);max-height:calc(100vh - var(--top-h,150px));overflow:auto}
+@media (max-width:900px){
+  body{padding-bottom:84px}
+  .top{position:static;padding:12px 14px 10px}
+  .top p{display:none}
+  .stage{grid-template-columns:1fr}
+  .map{overflow-x:auto;padding:6px 0 10px;-webkit-overflow-scrolling:touch}
+  .map svg{min-width:760px;max-height:none}
+  .side{border-left:0;border-top:1px solid var(--line);position:static;max-height:none;min-height:0;padding:18px 16px 28px}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:6;margin:0;gap:10px;background:var(--paper);
+       border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px))}
+  .nav .btn{flex:1}
+}
+
+/* ---------- carte ---------- */
+.lk{fill:none;stroke-linecap:round}
+.lk.trunk{stroke:var(--trunk);stroke-width:3}
+.lk.access{stroke:var(--access);stroke-width:2.5}
+.lk.serial{stroke:var(--serial);stroke-width:3;stroke-dasharray:10 6}
+.lk.routed{stroke:var(--routed);stroke-width:3}
+.lk.plain{stroke:var(--plain);stroke-width:2}
+.lk.off{opacity:var(--dim)}
+.dev .shape{stroke-width:2}
+.dev.off{opacity:var(--dim)}
+.dev text{font-family:var(--font);font-size:25px;font-weight:700;fill:var(--ink)}
+.dev .kind{font-size:17px;font-weight:400;fill:var(--muted)}
+.dev.router .shape{fill:var(--panel);stroke:var(--ink)}
+.dev.core .shape{fill:var(--panel);stroke:var(--ink);stroke-width:3.5}
+.dev.distri .shape{fill:var(--panel);stroke:var(--ink)}
+.dev.switch .shape{fill:var(--panel);stroke:var(--ink)}
+.dev.host .shape{fill:var(--panel);stroke:var(--ink)}
+.halo{fill:none;stroke:var(--halo);stroke-width:5;opacity:0}
+.halo.on{opacity:1;animation:halo 1.1s ease-out 1}
+@keyframes halo{from{stroke-width:14;opacity:.15}to{stroke-width:5;opacity:1}}
+.flow{fill:none;stroke-width:7;stroke-linecap:round;stroke-dasharray:14 16;animation:flow 1.1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-30}}
+.cap rect{stroke-width:2}
+.cap text{font-family:var(--font);font-size:24px;font-weight:700}
+@media (prefers-reduced-motion:reduce){.flow{animation:none;stroke-dasharray:none}.halo.on{animation:none}}
+
+/* ---------- panneau ---------- */
+.eyebrow{color:var(--muted);font-size:.92rem;margin:0}
+.side h2{margin:2px 0 4px;font-size:1.55rem;line-height:1.2}
+.ports{margin:0 0 12px;color:var(--muted);font-size:.95rem}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.pill{border-radius:999px;padding:3px 11px;font-size:.86rem;font-weight:700;color:var(--pill-ink);background:var(--l2)}
+.pill.tag{background:var(--trunk)} .pill.route{background:var(--route)} .pill.acl{background:var(--acl)}
+.pill.nat{background:var(--nat)} .pill.l2{background:var(--l2)} .pill.host{background:var(--host)}
+.say{margin:0 0 10px}
+.say b{display:inline-block;min-width:4.6em}
+.note{margin:10px 0 0;color:var(--muted);font-size:.93rem;border-left:3px solid var(--line);padding-left:10px}
+.frame{margin:16px 0 6px;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.frame h3{margin:0;font-size:.95rem;padding:8px 12px;background:var(--paper);border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:8.6em 1fr;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line);align-items:baseline}
+.row:last-child{border-bottom:0}
+.row .k{color:var(--muted);font-size:.9rem}
+.row .v{font-family:var(--mono);font-size:.93rem;word-break:break-word}
+.row.chg{background:var(--hl)}
+.row.chg .v{color:var(--hl-ink);font-weight:600}
+.mod{display:block;font-family:var(--font);font-size:.8rem;font-weight:700;color:var(--hl-ink)}
+.intro h2{font-size:1.45rem}
+.intro ul{padding-left:1.1em;margin:6px 0 14px}
+.intro li{margin:0 0 6px}
+.key{display:grid;grid-template-columns:36px 1fr;gap:6px 10px;align-items:center;margin:8px 0 16px;font-size:.95rem}
+.sw{height:0;border-top-width:4px;border-top-style:solid}
+.sw.trunk{border-color:var(--trunk)} .sw.access{border-color:var(--access)}
+.sw.serial{border-color:var(--serial);border-top-style:dashed} .sw.plain{border-color:var(--plain)} .sw.routed{border-color:var(--routed)}
+.recap{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.recap h3{font-size:1.02rem;margin:0 0 6px}
+.recap li{margin:0 0 5px}
+.kbd{font-size:.85rem;color:var(--muted);margin-top:18px}
+
+/* ---------- version 2 ---------- */
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.tab{border:1.5px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700;font-size:.93rem}
+.tab[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.rail-dots{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.toggle{border:1.5px dashed var(--muted);background:transparent;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:700;font-size:.9rem}
+.toggle[aria-pressed="true"]{border-style:solid;border-color:#B8862B;background:#F6E7C5;color:#4A3505}
+:root[data-theme="dark"] .toggle[aria-pressed="true"]{background:#4A3A12;color:#FFE59A;border-color:#D9B26B}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .toggle[aria-pressed="true"]{background:#4A3A12;color:#FFE59A;border-color:#D9B26B}}
+.sub{margin:16px 0 4px;font-size:1.05rem}
+.quiz{margin:16px 0 6px;border:1.5px dashed #B8862B;border-radius:10px;padding:12px 14px}
+.quiz h3{margin:0 0 4px;font-size:1rem}
+.hint{margin:0 0 10px;color:var(--muted);font-size:.9rem}
+.opt{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer}
+.opt input{width:20px;height:20px;accent-color:var(--trunk)}
+.quiz .btn{margin-top:10px}
+.verdict{margin:14px 0 0;font-weight:700;border-radius:8px;padding:8px 12px}
+.verdict.ok{background:color-mix(in srgb,var(--access) 18%,transparent);color:var(--ink)}
+.verdict.ko{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--ink)}
+.hint2{color:var(--muted);font-style:italic}
+#retry{margin:8px 0 0}
+[hidden]{display:none!important}
+.modes{display:flex;gap:6px;margin:8px 0 10px}
+.mode{border:1.5px solid var(--ink);background:transparent;border-radius:999px;padding:6px 16px;cursor:pointer;font-weight:700}
+.mode[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.pin rect{fill:var(--panel);stroke:var(--host);stroke-width:2.5}
+.pin text{font-family:var(--mono);font-size:23px;font-weight:600;fill:var(--ink)}
+.pin .lead{stroke:var(--host);stroke-width:2.5;stroke-dasharray:6 6}
+.clock{margin:0 0 12px;color:var(--muted);font-size:.95rem}
+.req{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 14px;font-style:italic}
+.req span{display:block;font-style:normal;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:2px}
+.pre{background:color-mix(in srgb,var(--acl) 14%,transparent);border-radius:8px;padding:8px 12px}
+.acts{padding-left:1.2em;margin:4px 0 12px}
+.acts li{margin:0 0 8px}
+.acts .w{display:block;color:var(--muted);font-size:.9rem}
+.acts code{font-family:var(--mono);font-size:.92rem;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:2px 7px;display:inline-block;margin-top:2px}
+.jury + .jury{margin-top:8px}
+.fix li{margin:0 0 6px}
+.ecart{border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.ecart p{margin:0 0 6px}
+.ecart span{display:block;font-size:.8rem;font-weight:700;color:var(--muted)}
+.qa{border-top:1px solid var(--line);padding:10px 0}
+.qq{font-weight:700;margin:0 0 6px}
+.qq.big{font-size:1.2rem;line-height:1.35}
+.qa-a{margin:0;padding:8px 12px;border-left:3px solid var(--access);background:var(--paper);border-radius:0 8px 8px 0}
+.btn.small{padding:5px 11px;font-size:.9rem}
+.goto{display:flex;flex-direction:column;gap:8px;margin-top:14px;align-items:flex-start}
+.flash{border:1.5px solid var(--line);border-radius:12px;padding:16px;margin:6px 0 10px}
+.rate{display:flex;gap:10px;margin-top:12px}
+.addr rect{fill:var(--panel);stroke:var(--muted);stroke-width:1.5}
+.addr text{font-family:var(--mono);font-size:20px;font-weight:600;fill:var(--ink)}
+.chrono{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.chrono .t{font-family:var(--mono);font-size:1.15rem;font-weight:600;min-width:4.2em}
+.chrono .h{color:var(--muted);font-size:.9rem}
+.chrono .h.warn{color:var(--bad);font-weight:700}
+.check{list-style:none;padding:0;margin:4px 0 12px}
+.check li{margin:0 0 8px}
+.check label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{width:20px;height:20px;margin-top:3px;accent-color:var(--access);flex:none}
+.check input:checked + span{color:var(--muted);text-decoration:line-through}
+.trap{border-left:3px solid var(--bad);background:color-mix(in srgb,var(--bad) 9%,transparent);padding:8px 12px;border-radius:0 8px 8px 0;margin:0 0 8px}
+.w2{display:block;color:var(--muted);font-size:.88rem}
+.quote{font-weight:700}
+.verify{margin:6px 0 12px;padding:8px 12px;border-radius:8px;background:color-mix(in srgb,#B8862B 16%,transparent);font-size:.95rem}
+.planwrap{overflow-x:auto;margin:4px 0 8px}
+.plan{border-collapse:collapse;width:100%;font-size:.85rem}
+.plan th,.plan td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+.plan td:nth-child(2),.plan td:nth-child(3){font-family:var(--mono);font-size:.8rem}
+.plan tr.grp td{font-weight:700;background:var(--paper);padding-top:8px}
+@media (min-width:901px){
+  html,body{height:100%;overflow:hidden}
+  .stage{height:calc(100vh - var(--top-h,150px))}
+  .map{height:100%;overflow:auto}
+  .side{position:static;height:100%;max-height:none;overflow:auto}
+}
+.map svg#loupe{max-height:none}
+.lz{stroke-width:1}
+.lz.zr{fill:color-mix(in srgb,var(--ink) 4%,transparent);stroke:var(--line)}
+.lz.zv{fill:color-mix(in srgb,var(--access) 9%,transparent);stroke:color-mix(in srgb,var(--access) 45%,transparent)}
+.lz.zw{fill:color-mix(in srgb,var(--serial) 11%,transparent);stroke:var(--serial);stroke-dasharray:6 5}
+.lzl{font-family:var(--font);font-size:13px;font-weight:700;fill:var(--muted)}
+.ln rect{fill:var(--panel);stroke:var(--muted);stroke-width:1.5}
+.ln.l3 rect{fill:color-mix(in srgb,var(--route) 13%,var(--panel));stroke:var(--route);stroke-width:2}
+.ln.cur rect{stroke:var(--trunk);stroke-width:3.5}
+.lnt{font-family:var(--font);font-size:14px;font-weight:700;fill:var(--ink)}
+.lns{font-family:var(--font);font-size:12px;fill:var(--muted)}
+.la{stroke:var(--ink);stroke-width:2}
+.la.ser{stroke:var(--serial);stroke-dasharray:7 5}
+.lah{fill:var(--ink)}.lah.ser{fill:var(--serial)}
+.lleader{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 4}
+.lcard{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+.lcard.now{stroke:var(--trunk);stroke-width:2.5}
+.lcard.fut{fill:transparent;stroke:var(--line);stroke-dasharray:5 5}
+.lcard.ask{fill:color-mix(in srgb,#B8862B 10%,var(--panel));stroke:#B8862B;stroke-width:2;stroke-dasharray:6 4}
+.lq{font-family:var(--font);font-size:20px;font-weight:700;fill:var(--muted)}
+.lqa{font-family:var(--font);font-size:14px;font-weight:700;fill:var(--ink)}
+.llab{font-family:var(--font);font-size:12px;fill:var(--muted)}
+.lval{font-family:var(--mono);font-size:12px;fill:var(--ink)}
+.lchip{fill:color-mix(in srgb,var(--trunk) 18%,var(--panel));stroke:var(--trunk)}
+.lchipt{font-family:var(--font);font-size:12px;font-weight:700;fill:var(--trunk)}
+.ldot{fill:var(--ink)}
+.lrow.dim{opacity:.16}
+.lbadge rect{fill:color-mix(in srgb,var(--bad) 13%,var(--panel));stroke:var(--bad)}
+.lbadge text{font-family:var(--font);font-size:12px;font-weight:700;fill:var(--bad)}
+.lwhy{font-family:var(--font);font-size:12.5px;fill:var(--ink)}
+.lwhyb{font-weight:700}
+.layers{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 14px}
+.laylab{font-size:.85rem;color:var(--muted);width:100%}
+.lay{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 11px;cursor:pointer;font-weight:700;font-size:.86rem}
+.lay[aria-pressed="true"]{background:var(--trunk);border-color:var(--trunk);color:var(--pill-ink)}
+.nat{margin:16px 0 6px;border:1.5px solid var(--nat);border-radius:10px;padding:10px 12px}
+.nat h3{margin:0 0 6px;font-size:.98rem;color:var(--nat)}
+.natrow{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:6px 8px;border-radius:8px;background:var(--paper)}
+.natrow code{font-family:var(--mono);font-size:.88rem}
+.natrow .nk{color:var(--muted);font-size:.82rem}
+.natrow.new,.natrow.read{background:var(--hl)}
+.natrow.new code,.natrow.read code{color:var(--hl-ink);font-weight:600}
+.lval.sm{font-size:11px}
+.lbadget{font-family:var(--font);font-size:12px;font-weight:700;fill:var(--bad)}
+@media (max-width:900px){
+  .map svg#loupe{min-width:0}
+  .modes{flex-wrap:wrap}
+  .mode{white-space:nowrap;font-size:.86rem;padding:6px 11px}
+}
+.frame.dead{border-color:var(--bad)}
+.frame.dead h3{color:var(--bad)}
+.frame.dead .v{text-decoration:line-through;text-decoration-thickness:1.5px;opacity:.75}
+.halo.bad{stroke:var(--bad)}
+.recap h3{font-size:1.02rem;margin:12px 0 6px}
+.jury{margin:0;padding:10px 12px;border-left:3px solid var(--access);background:var(--paper);border-radius:0 8px 8px 0}
+@media (max-width:900px){ .tabs .tab{flex:1 1 45%} }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Le trajet de la trame, dans ta maquette</h1>
+  <p>Ta maquette, aux mêmes positions que dans Packet Tracer. Suis un trajet étape par étape, ou prépare ta soutenance partie par partie.</p>
+  <div class="modes" role="group" aria-label="Mode">
+    <button class="mode" data-mode="trajets">Les trajets</button>
+    <button class="mode" data-mode="sout">La soutenance</button>
+    <button class="mode" data-mode="loupe">La trame à la loupe</button>
+  </div>
+  <div class="tabs" id="tabs" role="group" aria-label="Choix du trajet"></div>
+  <div class="tabs" id="ltabs" role="group" aria-label="Choix de la phase" hidden></div>
+  <div class="rail">
+    <div id="rail" class="rail-dots" role="group" aria-label="Étapes du trajet"></div>
+    <button class="toggle" id="train" aria-pressed="false">Mode entraînement</button>
+    <button class="toggle" id="addrBtn" aria-pressed="false">Adresses sur la carte</button>
+    <div class="nav">
+      <button class="btn" id="prev">Étape précédente</button>
+      <button class="btn primary" id="next">Étape suivante</button>
+    </div>
+  </div>
+  <div class="chrono" id="chrono" hidden><span class="t" id="chT">00:00</span><button class="btn small" id="chGo">Démarrer le chronomètre</button><button class="btn small" id="chRz">Remettre à zéro</button><span class="h" id="chH"></span></div>
+</header>
+<main class="stage">
+  <div class="map"><svg id="map" role="img" aria-label="Topologie de la maquette Impact Influence"></svg><svg id="loupe" role="img" aria-label="La trame à la loupe" hidden></svg></div>
+  <aside class="side" id="side" aria-live="polite"></aside>
+</main>
+<script>
+const TOPO = {"devices": [{"n": "Bleu", "x": 591.5, "y": 187.0, "k": "router"}, {"n": "Vert", "x": 875.5, "y": 177.0, "k": "router"}, {"n": "CORE-L3", "x": 695.5, "y": 513.0, "k": "core"}, {"n": "DISTRI-GAUCHE", "x": 433.5, "y": 668.0, "k": "distri"}, {"n": "DISTRI-DROITE", "x": 1003.5, "y": 668.0, "k": "distri"}, {"n": "SW-DNS", "x": 104.0, "y": 871.0, "k": "switch"}, {"n": "SW-INFO", "x": 371.0, "y": 873.0, "k": "switch"}, {"n": "SW-FINANCE", "x": 632.0, "y": 873.0, "k": "switch"}, {"n": "SW-COM", "x": 907.0, "y": 872.0, "k": "switch"}, {"n": "SW-RH", "x": 1168.0, "y": 875.0, "k": "switch"}, {"n": "SW-DIRECTION", "x": 1413.0, "y": 876.0, "k": "switch"}, {"n": "SW-ACCUEIL", "x": 319.0, "y": 48.0, "k": "switch"}, {"n": "SW-SHOWROOM", "x": 313.0, "y": 269.0, "k": "switch"}, {"n": "SW-WEB", "x": 1105.0, "y": 36.0, "k": "switch"}, {"n": "SW-REUNION", "x": 1117.0, "y": 301.0, "k": "switch"}, {"n": "SRV-WEB", "x": 1431.5, "y": 42.0, "k": "host"}, {"n": "REUNION", "x": 1441.5, "y": 312.0, "k": "host"}, {"n": "ACCUEIL", "x": 102.5, "y": 49.0, "k": "host"}, {"n": "SHOWROOM", "x": 90.5, "y": 261.0, "k": "host"}, {"n": "SRV-DNS", "x": 99.5, "y": 1078.0, "k": "host"}, {"n": "INFORMATIQUE", "x": 371.5, "y": 1089.0, "k": "host"}, {"n": "FINANCE", "x": 635.5, "y": 1094.0, "k": "host"}, {"n": "COMMERCIAL", "x": 921.5, "y": 1093.0, "k": "host"}, {"n": "RH", "x": 1187.5, "y": 1103.0, "k": "host"}, {"n": "DIRECTION", "x": 1437.5, "y": 1101.0, "k": "host"}, {"n": "Rouge", "x": 695.5, "y": 377.0, "k": "router"}], "links": [{"a": "Bleu", "pa": "Serial0/1/1", "b": "Vert", "pb": "Serial0/1/0", "k": "serial"}, {"a": "CORE-L3", "pa": "GigabitEthernet1/0/2", "b": "DISTRI-GAUCHE", "pb": "GigabitEthernet1/0/1", "k": "trunk"}, {"a": "CORE-L3", "pa": "GigabitEthernet1/0/3", "b": "DISTRI-DROITE", "pb": "GigabitEthernet1/0/1", "k": "trunk"}, {"a": "DISTRI-GAUCHE", "pa": "GigabitEthernet1/0/2", "b": "DISTRI-DROITE", "pb": "GigabitEthernet1/0/2", "k": "trunk"}, {"a": "DISTRI-GAUCHE", "pa": "GigabitEthernet1/0/3", "b": "DISTRI-DROITE", "pb": "GigabitEthernet1/0/3", "k": "trunk"}, {"a": "DISTRI-GAUCHE", "pa": "GigabitEthernet1/0/4", "b": "DISTRI-DROITE", "pb": "GigabitEthernet1/0/4", "k": "trunk"}, {"a": "DISTRI-GAUCHE", "pa": "GigabitEthernet1/0/5", "b": "DISTRI-DROITE", "pb": "GigabitEthernet1/0/5", "k": "trunk"}, {"a": "SW-DNS", "pa": "GigabitEthernet0/1", "b": "DISTRI-GAUCHE", "pb": "GigabitEthernet1/0/6", "k": "trunk"}, {"a": "SW-INFO", "pa": "GigabitEthernet0/1", "b": "DISTRI-GAUCHE", "pb": "GigabitEthernet1/0/7", "k": "trunk"}, {"a": "SW-FINANCE", "pa": "GigabitEthernet0/1", "b": "DISTRI-GAUCHE", "pb": "GigabitEthernet1/0/8", "k": "trunk"}, {"a": "SW-COM", "pa": "GigabitEthernet0/1", "b": "DISTRI-GAUCHE", "pb": "GigabitEthernet1/0/9", "k": "trunk"}, {"a": "SW-RH", "pa": "GigabitEthernet0/1", "b": "DISTRI-GAUCHE", "pb": "GigabitEthernet1/0/10", "k": "trunk"}, {"a": "SW-DIRECTION", "pa": "GigabitEthernet0/1", "b": "DISTRI-GAUCHE", "pb": "GigabitEthernet1/0/11", "k": "trunk"}, {"a": "DISTRI-DROITE", "pa": "GigabitEthernet1/0/6", "b": "SW-DNS", "pb": "GigabitEthernet0/2", "k": "trunk"}, {"a": "DISTRI-DROITE", "pa": "GigabitEthernet1/0/7", "b": "SW-INFO", "pb": "GigabitEthernet0/2", "k": "trunk"}, {"a": "DISTRI-DROITE", "pa": "GigabitEthernet1/0/8", "b": "SW-FINANCE", "pb": "GigabitEthernet0/2", "k": "trunk"}, {"a": "DISTRI-DROITE", "pa": "GigabitEthernet1/0/9", "b": "SW-COM", "pb": "GigabitEthernet0/2", "k": "trunk"}, {"a": "DISTRI-DROITE", "pa": "GigabitEthernet1/0/10", "b": "SW-RH", "pb": "GigabitEthernet0/2", "k": "trunk"}, {"a": "DISTRI-DROITE", "pa": "GigabitEthernet1/0/11", "b": "SW-DIRECTION", "pb": "GigabitEthernet0/2", "k": "trunk"}, {"a": "SW-DNS", "pa": "FastEthernet0/1", "b": "SRV-DNS", "pb": "FastEthernet0", "k": "access"}, {"a": "SW-INFO", "pa": "FastEthernet0/1", "b": "INFORMATIQUE", "pb": "FastEthernet0", "k": "access"}, {"a": "SW-FINANCE", "pa": "FastEthernet0/1", "b": "FINANCE", "pb": "FastEthernet0", "k": "access"}, {"a": "SW-COM", "pa": "FastEthernet0/1", "b": "COMMERCIAL", "pb": "FastEthernet0", "k": "access"}, {"a": "SW-RH", "pa": "FastEthernet0/1", "b": "RH", "pb": "FastEthernet0", "k": "access"}, {"a": "SW-DIRECTION", "pa": "FastEthernet0/1", "b": "DIRECTION", "pb": "FastEthernet0", "k": "access"}, {"a": "Vert", "pa": "GigabitEthernet0/0/0", "b": "SW-WEB", "pb": "GigabitEthernet0/1", "k": "plain"}, {"a": "Vert", "pa": "GigabitEthernet0/0/1", "b": "SW-REUNION", "pb": "GigabitEthernet0/1", "k": "plain"}, {"a": "Bleu", "pa": "GigabitEthernet0/0/0", "b": "SW-ACCUEIL", "pb": "GigabitEthernet0/1", "k": "plain"}, {"a": "Bleu", "pa": "GigabitEthernet0/0/1", "b": "SW-SHOWROOM", "pb": "GigabitEthernet0/1", "k": "plain"}, {"a": "SW-WEB", "pa": "FastEthernet0/1", "b": "SRV-WEB", "pb": "FastEthernet0", "k": "plain"}, {"a": "SW-REUNION", "pa": "FastEthernet0/1", "b": "REUNION", "pb": "FastEthernet0", "k": "plain"}, {"a": "SW-ACCUEIL", "pa": "FastEthernet0/1", "b": "ACCUEIL", "pb": "FastEthernet0", "k": "plain"}, {"a": "SW-SHOWROOM", "pa": "FastEthernet0/1", "b": "SHOWROOM", "pb": "FastEthernet0", "k": "plain"}, {"a": "Rouge", "pa": "Serial0/1/1", "b": "Vert", "pb": "Serial0/1/1", "k": "serial"}, {"a": "Rouge", "pa": "GigabitEthernet0/0/0", "b": "CORE-L3", "pb": "GigabitEthernet1/0/1", "k": "routed"}, {"a": "Rouge", "pa": "Serial0/1/0", "b": "Bleu", "pb": "Serial0/1/0", "k": "serial"}]};
+const S = [
+ { n:1, dir:"aller", dev:"FINANCE", next:"SW-FINANCE", cap:"sans étiquette",
+   title:"PC Finance", ports:"Sort par sa carte réseau Fa0, vers le switch de son service.",
+   pills:[["host","Envoie à sa passerelle"]],
+   say:[["Lit","l'adresse de destination, 192.168.90.80, et son propre masque."],
+        ["Décide","ce n'est pas son réseau, 192.168.40.0/24. Il envoie donc à sa passerelle, 192.168.40.1, le cœur. S'il ne connaît pas encore son adresse matérielle, il la demande d'abord par ARP."],
+        ["Modifie","rien : il fabrique la trame."]],
+   f:{ms:"00E0.B0DD.9C65",md:"0001.6346.6004",tag:"aucune",is:"192.168.40.11 : 1025",id:"192.168.90.80 : 80"}, chg:["ms","md","tag","is","id"], created:true,
+   note:"L'adresse 192.168.40.11 est probable, puisque le poste la reçoit par DHCP. Le numéro 1025 est choisi par le navigateur, c'est un exemple." },
+ { n:2, dir:"aller", dev:"SW-FINANCE", next:"DISTRI-GAUCHE", cap:"étiquette VLAN 40",
+   title:"Switch de la Finance", ports:"Entre par Fa0/1, en access dans le VLAN 40. Sort par Gi0/1, en trunk.",
+   pills:[["l2","Niveau 2 seul"],["tag","Pose l'étiquette"]],
+   say:[["Lit","uniquement l'adresse matérielle de destination, jamais l'IP. Son port d'entrée lui dit que la trame appartient au VLAN 40."],
+        ["Décide","l'adresse du cœur se trouve derrière son lien montant."],
+        ["Modifie","il pose l'étiquette VLAN 40 en sortant par le trunk."]],
+   f:{ms:"00E0.B0DD.9C65",md:"0001.6346.6004",tag:"VLAN 40",is:"192.168.40.11 : 1025",id:"192.168.90.80 : 80"}, chg:["tag"],
+   note:"Un seul de ses deux liens montants travaille pour le VLAN 40, l'autre est bloqué par le protocole anti-boucle. La trame peut donc passer par DISTRI-DROITE à la place : le traitement est identique." },
+ { n:3, dir:"aller", dev:"DISTRI-GAUCHE", next:"CORE-L3", cap:"étiquette VLAN 40",
+   title:"Distribution", ports:"Entre par Gi1/0/8, en trunk. Sort par Gi1/0/1, en trunk, vers le cœur.",
+   pills:[["l2","Niveau 2 seul"],["tag","Lit l'étiquette"]],
+   say:[["Lit","l'étiquette, VLAN 40, et l'adresse matérielle de destination. Jamais l'IP."],
+        ["Décide","dans sa table du VLAN 40, cette adresse se trouve derrière Gi1/0/1, vers le cœur."],
+        ["Modifie","rien. L'étiquette est conservée."]],
+   f:{ms:"00E0.B0DD.9C65",md:"0001.6346.6004",tag:"VLAN 40",is:"192.168.40.11 : 1025",id:"192.168.90.80 : 80"}, chg:[] },
+ { n:4, dir:"aller", dev:"CORE-L3", next:"Rouge", cap:"sans étiquette",
+   title:"Switch de cœur", ports:"Entre par Gi1/0/2, en trunk. Sort par Gi1/0/1, port routé vers le routeur Rouge.",
+   pills:[["tag","Retire l'étiquette"],["acl","Liste 120 non active"],["route","Route par défaut"]],
+   say:[["Lit","l'étiquette, puis l'adresse matérielle : c'est celle de son interface Vlan40, la trame est pour lui. Il retire l'étiquette et lit enfin l'IP."],
+        ["Décide","il ne connaît pas le réseau 192.168.90.0. Il applique sa route par défaut, vers 192.168.99.1, le routeur Rouge."],
+        ["Modifie","il fabrique une nouvelle trame, avec de nouvelles adresses matérielles, sans étiquette puisque c'est un port routé."]],
+   f:{ms:"0002.1747.6A01",md:"0001.977A.8E01",tag:"aucune",is:"192.168.40.11 : 1025",id:"192.168.90.80 : 80"}, chg:["ms","md","tag"],
+   note:"En théorie, la liste 120 serait vérifiée ici, à l'entrée de Vlan40, et autoriserait le paquet. Dans ta maquette, elle n'est pas active : rien n'est vérifié." },
+ { n:5, dir:"aller", dev:"Rouge", next:"Vert", cap:"trame série", serial:true,
+   title:"Routeur Rouge", ports:"Entre par Gi0/0/0, marquée inside. Sort par Se0/1/1, marquée outside, vers le Vert.",
+   pills:[["route","Route OSPF"],["nat","NAT : expéditeur remplacé"]],
+   say:[["Décide","d'abord la route : il connaît 192.168.90.0 grâce à OSPF, appris du routeur Vert. Sortie par Se0/1/1."],
+        ["Traduit","ensuite : le paquet entre par une interface inside, sort par une interface outside, et sa source fait partie de la liste 1. Il remplace l'expéditeur et note la ligne dans sa table."],
+        ["Modifie","l'expéditeur, et il emballe le paquet dans une trame série, sans adresse matérielle."]],
+   f:{ms:"aucune, liaison série",md:"aucune, liaison série",tag:"aucune",is:"132.186.32.33 : 1025",id:"192.168.90.80 : 80"}, chg:["ms","md","is"],
+   note:"Pourquoi .33, alors que le paquet sort par Se0/1/1, dont l'adresse est .42 ? Parce que ta règle NAT désigne l'interface Serial0/1/0, la liaison vers le Bleu. Aucune liste n'agit ici : la liste 100 est en entrée des liaisons série, pas en sortie." },
+ { n:6, dir:"aller", dev:"Vert", next:"SW-WEB", cap:"sans étiquette",
+   title:"Routeur Vert", ports:"Entre par Se0/1/1. Sort par Gi0/0/0, vers le switch du serveur web.",
+   pills:[["route","Réseau branché"]],
+   say:[["Décide","le réseau 192.168.90.0 est branché directement sur son Gi0/0/0."],
+        ["Modifie","il fabrique une trame Ethernet vers le serveur. Aucune liste, aucun NAT."]],
+   f:{ms:"0010.116E.5701",md:"0010.1110.EAB0",tag:"aucune",is:"132.186.32.33 : 1025",id:"192.168.90.80 : 80"}, chg:["ms","md"] },
+ { n:7, dir:"aller", dev:"SW-WEB", next:"SRV-WEB", cap:"sans étiquette",
+   title:"Switch du serveur web", ports:"Entre par Gi0/1. Sort par Fa0/1, vers le serveur.",
+   pills:[["l2","Niveau 2 seul"]],
+   say:[["Lit","uniquement l'adresse matérielle de destination. Aucun VLAN n'y est configuré : tout reste dans le VLAN 1 par défaut, sans étiquette."],
+        ["Modifie","rien."]],
+   f:{ms:"0010.116E.5701",md:"0010.1110.EAB0",tag:"aucune",is:"132.186.32.33 : 1025",id:"192.168.90.80 : 80"}, chg:[] },
+ { n:8, dir:"aller", dev:"SRV-WEB", next:null, arrival:true,
+   title:"Serveur web", ports:"Reçoit par sa carte réseau Fa0.",
+   pills:[["host","Service web, port 80"]],
+   say:[["Lit","le port de destination, 80 : c'est pour son service web."],
+        ["Voit","un expéditeur 132.186.32.33. Il croit parler au routeur Rouge, et ignore l'existence du poste Finance."]],
+   f:{ms:"0010.116E.5701",md:"0010.1110.EAB0",tag:"aucune",is:"132.186.32.33 : 1025",id:"192.168.90.80 : 80"}, chg:[] },
+
+ { n:9, dir:"retour", dev:"SRV-WEB", next:"SW-WEB", cap:"sans étiquette",
+   title:"Serveur web", ports:"Sort par sa carte réseau Fa0.",
+   pills:[["host","Envoie à sa passerelle"]],
+   say:[["Décide","il répond à l'expéditeur qu'il a vu, 132.186.32.33. Cette adresse n'est pas dans son réseau : il envoie à sa passerelle, 192.168.90.254, le routeur Vert."],
+        ["Modifie","rien : il fabrique la réponse."]],
+   f:{ms:"0010.1110.EAB0",md:"0010.116E.5701",tag:"aucune",is:"192.168.90.80 : 80",id:"132.186.32.33 : 1025"}, chg:["ms","md","tag","is","id"], created:true },
+ { n:10, dir:"retour", dev:"SW-WEB", next:"Vert", cap:"sans étiquette",
+   title:"Switch du serveur web", ports:"Entre par Fa0/1. Sort par Gi0/1, vers le routeur Vert.",
+   pills:[["l2","Niveau 2 seul"]],
+   say:[["Lit","l'adresse matérielle de destination, et remet la trame au routeur Vert."],["Modifie","rien."]],
+   f:{ms:"0010.1110.EAB0",md:"0010.116E.5701",tag:"aucune",is:"192.168.90.80 : 80",id:"132.186.32.33 : 1025"}, chg:[] },
+ { n:11, dir:"retour", dev:"Vert", next:"Rouge", cap:"trame série", serial:true,
+   title:"Routeur Vert", ports:"Entre par Gi0/0/0. Sort par Se0/1/1, vers le routeur Rouge.",
+   pills:[["route","Route OSPF"]],
+   say:[["Décide","132.186.32.33 appartient au réseau de la liaison Rouge-Bleu, appris par OSPF. Ce réseau touche le Rouge et le Bleu à égale distance."],
+        ["Modifie","il emballe le paquet dans une trame série, sans adresse matérielle. Aucune liste, aucun NAT."]],
+   f:{ms:"aucune, liaison série",md:"aucune, liaison série",tag:"aucune",is:"192.168.90.80 : 80",id:"132.186.32.33 : 1025"}, chg:["ms","md"],
+   note:"La réponse peut aussi passer par le Bleu. Dans les deux cas, elle arrive au routeur Rouge par une liaison série, où la liste 100 l'attend." },
+ { n:12, dir:"retour", dev:"Rouge", next:"CORE-L3", cap:"sans étiquette",
+   title:"Routeur Rouge", ports:"Entre par une liaison série, marquée outside. Sort par Gi0/0/0, marquée inside.",
+   pills:[["acl","Liste 100 : autorisé"],["nat","NAT : destinataire remplacé"],["route","Route statique"]],
+   say:[["1. Liste","la liste 100, en entrée : ce n'est pas une requête UDP 53 vers le serveur DNS. La ligne permit ip any any l'autorise. C'est la seule liste réellement vérifiée sur tout le trajet."],
+        ["2. NAT","il cherche 132.186.32.33 : 1025 dans sa table, trouve la ligne notée à l'aller, et remplace le destinataire par 192.168.40.11 : 1025."],
+        ["3. Route","le réseau 192.168.40.0 n'est pas branché sur lui. Sa route statique l'envoie au cœur, 192.168.99.2."]],
+   f:{ms:"0001.977A.8E01",md:"0002.1747.6A01",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.40.11 : 1025"}, chg:["ms","md","id"],
+   note:"Au retour, l'ordre s'inverse par rapport à l'aller : le routeur traduit d'abord, puis choisit la route. Il doit connaître la vraie destination avant de savoir où l'envoyer." },
+ { n:13, dir:"retour", dev:"CORE-L3", next:"DISTRI-GAUCHE", cap:"étiquette VLAN 40",
+   title:"Switch de cœur", ports:"Entre par Gi1/0/1, port routé. Sort par son interface Vlan40, vers une distribution en trunk.",
+   pills:[["route","Réseau branché"],["acl","Liste 120 non concernée"],["tag","Pose l'étiquette"]],
+   say:[["Décide","le réseau 192.168.40.0 est branché directement sur son interface Vlan40."],
+        ["Modifie","il fabrique une nouvelle trame et pose l'étiquette VLAN 40 en sortant vers le trunk."]],
+   f:{ms:"0001.6346.6004",md:"00E0.B0DD.9C65",tag:"VLAN 40",is:"192.168.90.80 : 80",id:"192.168.40.11 : 1025"}, chg:["ms","md","tag"],
+   note:"La liste 120 est prévue en entrée de Vlan40. Ici, la réponse en sort : même en théorie, elle ne serait pas vérifiée." },
+ { n:14, dir:"retour", dev:"DISTRI-GAUCHE", next:"SW-FINANCE", cap:"étiquette VLAN 40",
+   title:"Distribution", ports:"Entre par Gi1/0/1, en trunk. Sort par Gi1/0/8, en trunk, vers le switch de la Finance.",
+   pills:[["l2","Niveau 2 seul"],["tag","Lit l'étiquette"]],
+   say:[["Lit","l'étiquette et l'adresse matérielle de destination."],["Modifie","rien. L'étiquette est conservée."]],
+   f:{ms:"0001.6346.6004",md:"00E0.B0DD.9C65",tag:"VLAN 40",is:"192.168.90.80 : 80",id:"192.168.40.11 : 1025"}, chg:[] },
+ { n:15, dir:"retour", dev:"SW-FINANCE", next:"FINANCE", cap:"sans étiquette",
+   title:"Switch de la Finance", ports:"Entre par Gi0/1, en trunk. Sort par Fa0/1, en access, vers le poste.",
+   pills:[["l2","Niveau 2 seul"],["tag","Retire l'étiquette"]],
+   say:[["Lit","l'étiquette, VLAN 40, et l'adresse matérielle : elle se trouve derrière Fa0/1."],
+        ["Modifie","il retire l'étiquette avant de remettre la trame au poste."]],
+   f:{ms:"0001.6346.6004",md:"00E0.B0DD.9C65",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.40.11 : 1025"}, chg:["tag"] },
+ { n:16, dir:"retour", dev:"FINANCE", next:null, arrival:true,
+   title:"PC Finance", ports:"Reçoit par sa carte réseau Fa0.",
+   pills:[["host","Conversation reconnue"]],
+   say:[["Lit","l'expéditeur, 192.168.90.80 : 80. C'est bien le serveur qu'il avait interrogé. Le destinataire est sa propre adresse, avec son numéro 1025."],
+        ["Résultat","tout correspond à sa conversation. La page s'affiche."]],
+   f:{ms:"0001.6346.6004",md:"00E0.B0DD.9C65",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.40.11 : 1025"}, chg:[] }
+];
+const S2 = [
+ { n:1, dir:"trajet", dev:"FINANCE", next:"SW-FINANCE", cap:"sans étiquette",
+   title:"PC Finance", ports:"Sort par sa carte réseau Fa0, vers le switch de son service.",
+   pills:[["host","Envoie à sa passerelle"]],
+   say:[["Lit","l'adresse de destination, 192.168.30.11, et son propre masque."],
+        ["Décide","ce n'est pas son réseau. Il envoie donc à sa passerelle, 192.168.40.1, l'interface Vlan40 du cœur."],
+        ["Modifie","rien : il fabrique la trame."]],
+   f:{ms:"00E0.B0DD.9C65",md:"0001.6346.6004",tag:"aucune",is:"192.168.40.11",id:"192.168.30.11"}, chg:["ms","md","tag","is","id"], created:true,
+   note:"Un ping n'utilise pas de numéro de port : les adresses IP apparaissent seules. L'adresse du poste de la Direction, reçue par DHCP, est probablement 192.168.30.11." },
+ { n:2, dir:"trajet", dev:"SW-FINANCE", next:"DISTRI-GAUCHE", cap:"étiquette VLAN 40",
+   title:"Switch de la Finance", ports:"Entre par Fa0/1, en access dans le VLAN 40. Sort par Gi0/1, en trunk.",
+   pills:[["l2","Niveau 2 seul"],["tag","Pose l'étiquette"]],
+   say:[["Lit","uniquement l'adresse matérielle de destination. Son port d'entrée lui dit que la trame appartient au VLAN 40."],
+        ["Modifie","il pose l'étiquette VLAN 40 en sortant par le trunk."]],
+   f:{ms:"00E0.B0DD.9C65",md:"0001.6346.6004",tag:"VLAN 40",is:"192.168.40.11",id:"192.168.30.11"}, chg:["tag"],
+   note:"La trame peut aussi passer par DISTRI-DROITE, selon ce que le protocole anti-boucle a bloqué. Le traitement est identique." },
+ { n:3, dir:"trajet", dev:"DISTRI-GAUCHE", next:"CORE-L3", cap:"étiquette VLAN 40",
+   title:"Distribution", ports:"Entre par Gi1/0/8, en trunk. Sort par Gi1/0/1, en trunk, vers le cœur.",
+   pills:[["l2","Niveau 2 seul"],["tag","Lit l'étiquette"]],
+   say:[["Lit","l'étiquette, VLAN 40, et l'adresse matérielle de destination, celle du cœur."],
+        ["Modifie","rien. L'étiquette est conservée."]],
+   f:{ms:"00E0.B0DD.9C65",md:"0001.6346.6004",tag:"VLAN 40",is:"192.168.40.11",id:"192.168.30.11"}, chg:[] },
+ { n:4, dir:"trajet", dev:"CORE-L3", next:"DISTRI-GAUCHE", cap:"étiquette VLAN 30",
+   title:"Switch de cœur", ports:"Entre par Gi1/0/2, en trunk, dans le VLAN 40. Ressort par son interface Vlan30, vers une distribution en trunk.",
+   pills:[["tag","Retire l'étiquette 40"],["acl","Liste 120 non active"],["route","Réseau branché"],["tag","Pose l'étiquette 30"]],
+   say:[["Lit","l'étiquette, puis l'adresse matérielle : c'est celle de son interface Vlan40, la trame est pour lui. Il retire l'étiquette et lit l'IP."],
+        ["Décide","le réseau 192.168.30.0 est branché directement sur son interface Vlan30. Pas besoin de route par défaut."],
+        ["Modifie","il fabrique une nouvelle trame depuis Vlan30 : nouvelles adresses matérielles, et étiquette VLAN 30."]],
+   f:{ms:"0001.6346.6003",md:"0010.11A9.40E9",tag:"VLAN 30",is:"192.168.40.11",id:"192.168.30.11"}, chg:["ms","md","tag"],
+   note:"Regarde les adresses IP : elles n'ont pas changé. Aucun routeur, aucun NAT. En théorie, la liste 120 serait lue à l'entrée de Vlan40, et sa ligne vers 192.168.30.0 autoriserait le paquet. Dans ta maquette, elle n'est pas active." },
+ { n:5, dir:"trajet", dev:"DISTRI-GAUCHE", next:"SW-DIRECTION", cap:"étiquette VLAN 30",
+   title:"Distribution", ports:"Entre par Gi1/0/1, en trunk. Sort par Gi1/0/11, en trunk, vers le switch de la Direction.",
+   pills:[["l2","Niveau 2 seul"],["tag","Lit l'étiquette"]],
+   say:[["Lit","l'étiquette, cette fois VLAN 30, et l'adresse matérielle du poste de la Direction."],
+        ["Modifie","rien. L'étiquette est conservée."]],
+   f:{ms:"0001.6346.6003",md:"0010.11A9.40E9",tag:"VLAN 30",is:"192.168.40.11",id:"192.168.30.11"}, chg:[] },
+ { n:6, dir:"trajet", dev:"SW-DIRECTION", next:"DIRECTION", cap:"sans étiquette",
+   title:"Switch de la Direction", ports:"Entre par Gi0/1, en trunk. Sort par Fa0/1, en access dans le VLAN 30.",
+   pills:[["l2","Niveau 2 seul"],["tag","Retire l'étiquette"]],
+   say:[["Lit","l'étiquette, VLAN 30, et l'adresse matérielle : elle se trouve derrière Fa0/1."],
+        ["Modifie","il retire l'étiquette avant de remettre la trame au poste."]],
+   f:{ms:"0001.6346.6003",md:"0010.11A9.40E9",tag:"aucune",is:"192.168.40.11",id:"192.168.30.11"}, chg:["tag"] },
+ { n:7, dir:"trajet", dev:"DIRECTION", next:null, arrival:true,
+   title:"PC Direction", ports:"Reçoit par sa carte réseau Fa0.",
+   pills:[["host","Reçoit le ping"]],
+   say:[["Lit","le destinataire : c'est sa propre adresse. L'expéditeur est 192.168.40.11, le poste Finance."],
+        ["Résultat","il répond. La réponse fait le chemin inverse : étiquette 30, le cœur, puis étiquette 40."]],
+   f:{ms:"0001.6346.6003",md:"0010.11A9.40E9",tag:"aucune",is:"192.168.40.11",id:"192.168.30.11"}, chg:[] }
+];
+
+const S3 = [
+ { n:1, dir:"aller", dev:"ACCUEIL", next:"SW-ACCUEIL", cap:"sans étiquette",
+   title:"PC Accueil", ports:"Sort par sa carte réseau Fa0, vers le switch de l'accueil.",
+   pills:[["host","Envoie à sa passerelle"]],
+   say:[["Lit","l'adresse 192.168.90.80, tapée directement dans le navigateur, et son propre masque."],
+        ["Décide","ce n'est pas son réseau. Il envoie à sa passerelle, 192.168.60.254, le routeur Bleu. C'est la passerelle que tu as corrigée : avant, ce poste était enfermé dans son réseau."],
+        ["Modifie","rien : il fabrique la trame."]],
+   f:{ms:"0001.9749.000E",md:"0030.A3EB.E701",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.90.80 : 80"}, chg:["ms","md","tag","is","id"], created:true,
+   note:"Il utilise l'adresse du serveur, pas son nom : depuis le Bleu, le serveur DNS est volontairement fermé par la liste 100. Le numéro 1025 est un exemple." },
+ { n:2, dir:"aller", dev:"SW-ACCUEIL", next:"Bleu", cap:"sans étiquette",
+   title:"Switch de l'accueil", ports:"Entre par Fa0/1. Sort par Gi0/1, vers le routeur Bleu.",
+   pills:[["l2","Niveau 2 seul"]],
+   say:[["Lit","uniquement l'adresse matérielle de destination. Aucun VLAN n'y est configuré : tout reste dans le VLAN 1 par défaut, sans étiquette."],
+        ["Modifie","rien."]],
+   f:{ms:"0001.9749.000E",md:"0030.A3EB.E701",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.90.80 : 80"}, chg:[] },
+ { n:3, dir:"aller", dev:"Bleu", next:"Vert", cap:"trame série", serial:true,
+   title:"Routeur Bleu", ports:"Entre par Gi0/0/0. Sort par Se0/1/1, directement vers le routeur Vert.",
+   pills:[["route","Route OSPF"]],
+   say:[["Décide","il connaît le réseau 192.168.90.0 grâce à OSPF, appris du routeur Vert par leur liaison directe."],
+        ["Modifie","il emballe le paquet dans une trame série, sans adresse matérielle. Aucune liste, aucun NAT."]],
+   f:{ms:"aucune, liaison série",md:"aucune, liaison série",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.90.80 : 80"}, chg:["ms","md"],
+   note:"Ce trafic ne passe pas par le siège : ni par le routeur Rouge, ni par son NAT, ni par sa liste 100." },
+ { n:4, dir:"aller", dev:"Vert", next:"SW-WEB", cap:"sans étiquette",
+   title:"Routeur Vert", ports:"Entre par Se0/1/0. Sort par Gi0/0/0, vers le switch du serveur web.",
+   pills:[["route","Réseau branché"]],
+   say:[["Décide","le réseau 192.168.90.0 est branché directement sur son Gi0/0/0."],
+        ["Modifie","il fabrique une trame Ethernet vers le serveur."]],
+   f:{ms:"0010.116E.5701",md:"0010.1110.EAB0",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.90.80 : 80"}, chg:["ms","md"] },
+ { n:5, dir:"aller", dev:"SW-WEB", next:"SRV-WEB", cap:"sans étiquette",
+   title:"Switch du serveur web", ports:"Entre par Gi0/1. Sort par Fa0/1, vers le serveur.",
+   pills:[["l2","Niveau 2 seul"]],
+   say:[["Lit","l'adresse matérielle de destination, et remet la trame au serveur."],["Modifie","rien."]],
+   f:{ms:"0010.116E.5701",md:"0010.1110.EAB0",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.90.80 : 80"}, chg:[] },
+ { n:6, dir:"aller", dev:"SRV-WEB", next:null, arrival:true,
+   title:"Serveur web", ports:"Reçoit par sa carte réseau Fa0.",
+   pills:[["host","Service web, port 80"]],
+   say:[["Lit","le port de destination, 80 : c'est pour son service web."],
+        ["Voit","l'expéditeur 192.168.60.253, la vraie adresse du poste. Contrairement au trajet depuis le siège, aucune traduction n'a eu lieu."]],
+   f:{ms:"0010.116E.5701",md:"0010.1110.EAB0",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.90.80 : 80"}, chg:[] },
+ { n:7, dir:"retour", dev:"SRV-WEB", next:"SW-WEB", cap:"sans étiquette",
+   title:"Serveur web", ports:"Sort par sa carte réseau Fa0.",
+   pills:[["host","Envoie à sa passerelle"]],
+   say:[["Décide","il répond à 192.168.60.253. Ce n'est pas son réseau : il envoie à sa passerelle, 192.168.90.254, le routeur Vert."],
+        ["Modifie","rien : il fabrique la réponse."]],
+   f:{ms:"0010.1110.EAB0",md:"0010.116E.5701",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.60.253 : 1025"}, chg:["ms","md","tag","is","id"], created:true },
+ { n:8, dir:"retour", dev:"SW-WEB", next:"Vert", cap:"sans étiquette",
+   title:"Switch du serveur web", ports:"Entre par Fa0/1. Sort par Gi0/1, vers le routeur Vert.",
+   pills:[["l2","Niveau 2 seul"]],
+   say:[["Lit","l'adresse matérielle de destination."],["Modifie","rien."]],
+   f:{ms:"0010.1110.EAB0",md:"0010.116E.5701",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.60.253 : 1025"}, chg:[] },
+ { n:9, dir:"retour", dev:"Vert", next:"Bleu", cap:"trame série", serial:true,
+   title:"Routeur Vert", ports:"Entre par Gi0/0/0. Sort par Se0/1/0, directement vers le routeur Bleu.",
+   pills:[["route","Route OSPF"]],
+   say:[["Décide","il connaît le réseau 192.168.60.0 grâce à OSPF, appris du routeur Bleu."],
+        ["Modifie","il emballe le paquet dans une trame série. Aucune liste, aucun NAT."]],
+   f:{ms:"aucune, liaison série",md:"aucune, liaison série",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.60.253 : 1025"}, chg:["ms","md"] },
+ { n:10, dir:"retour", dev:"Bleu", next:"SW-ACCUEIL", cap:"sans étiquette",
+   title:"Routeur Bleu", ports:"Entre par Se0/1/1. Sort par Gi0/0/0, vers le switch de l'accueil.",
+   pills:[["route","Réseau branché"]],
+   say:[["Décide","le réseau 192.168.60.0 est branché directement sur son Gi0/0/0."],
+        ["Modifie","il fabrique une trame Ethernet vers le poste."]],
+   f:{ms:"0030.A3EB.E701",md:"0001.9749.000E",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.60.253 : 1025"}, chg:["ms","md"] },
+ { n:11, dir:"retour", dev:"SW-ACCUEIL", next:"ACCUEIL", cap:"sans étiquette",
+   title:"Switch de l'accueil", ports:"Entre par Gi0/1. Sort par Fa0/1, vers le poste.",
+   pills:[["l2","Niveau 2 seul"]],
+   say:[["Lit","l'adresse matérielle de destination."],["Modifie","rien."]],
+   f:{ms:"0030.A3EB.E701",md:"0001.9749.000E",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.60.253 : 1025"}, chg:[] },
+ { n:12, dir:"retour", dev:"ACCUEIL", next:null, arrival:true,
+   title:"PC Accueil", ports:"Reçoit par sa carte réseau Fa0.",
+   pills:[["host","Conversation reconnue"]],
+   say:[["Lit","l'expéditeur, 192.168.90.80 : 80, le serveur qu'il avait interrogé."],["Résultat","la page s'affiche."]],
+   f:{ms:"0030.A3EB.E701",md:"0001.9749.000E",tag:"aucune",is:"192.168.90.80 : 80",id:"192.168.60.253 : 1025"}, chg:[] }
+];
+
+const S4 = [
+ { n:1, dir:"trajet", dev:"ACCUEIL", next:"SW-ACCUEIL", cap:"sans étiquette",
+   title:"PC Accueil", ports:"Sort par sa carte réseau Fa0, vers le switch de l'accueil.",
+   pills:[["host","Envoie à sa passerelle"]],
+   say:[["Lit","il veut ouvrir impactinfluence.com. Il doit d'abord demander l'adresse de ce nom au serveur DNS, 192.168.100.10."],
+        ["Décide","ce n'est pas son réseau. Il envoie à sa passerelle, 192.168.60.254, le routeur Bleu."],
+        ["Modifie","rien : il fabrique la requête."]],
+   f:{ms:"0001.9749.000E",md:"0030.A3EB.E701",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.100.10 : 53"}, chg:["ms","md","tag","is","id"], created:true,
+   note:"Une requête DNS utilise le protocole UDP, vers le port 53. Le numéro 1025 est un exemple." },
+ { n:2, dir:"trajet", dev:"SW-ACCUEIL", next:"Bleu", cap:"sans étiquette",
+   title:"Switch de l'accueil", ports:"Entre par Fa0/1. Sort par Gi0/1, vers le routeur Bleu.",
+   pills:[["l2","Niveau 2 seul"]],
+   say:[["Lit","uniquement l'adresse matérielle de destination."],["Modifie","rien."]],
+   f:{ms:"0001.9749.000E",md:"0030.A3EB.E701",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.100.10 : 53"}, chg:[] },
+ { n:3, dir:"trajet", dev:"Bleu", next:"Rouge", cap:"trame série", serial:true,
+   title:"Routeur Bleu", ports:"Entre par Gi0/0/0. Sort par Se0/1/0, vers le routeur Rouge.",
+   pills:[["route","Route OSPF"]],
+   say:[["Décide","il connaît le réseau 192.168.100.0 grâce à OSPF. C'est le routeur Rouge qui l'annonce, en redistribuant ses routes statiques. Sortie par la liaison directe vers le Rouge."],
+        ["Modifie","il emballe le paquet dans une trame série, sans adresse matérielle."]],
+   f:{ms:"aucune, liaison série",md:"aucune, liaison série",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.100.10 : 53"}, chg:["ms","md"] },
+ { n:4, dir:"trajet", dev:"Rouge", next:null, dropped:true,
+   title:"Routeur Rouge", ports:"Entre par Se0/1/0, où la liste 100 est accrochée en entrée.",
+   pills:[["acl","Liste 100 : interdit"]],
+   say:[["Lit","la liste 100, avant même de choisir une route. Sa première ligne interdit le protocole UDP, depuis n'importe quelle source, vers la machine 192.168.100.10, sur le port 53."],
+        ["Décide","le paquet correspond exactement : UDP, vers 192.168.100.10, port 53. La lecture s'arrête là."],
+        ["Résultat","le paquet est détruit. Il n'atteint jamais le serveur DNS, et le compteur de cette ligne augmente d'un."]],
+   f:{ms:"aucune, liaison série",md:"aucune, liaison série",tag:"aucune",is:"192.168.60.253 : 1025",id:"192.168.100.10 : 53"}, chg:[],
+   note:"Le poste attend une réponse qui ne viendra jamais : le nom ne se résout pas. Pour le prouver à l'écran, tape show access-lists sur le routeur Rouge : le compteur de la ligne deny a augmenté." }
+];
+
+const SCEN = [
+ { id:"web", name:"Finance vers le serveur web", steps:S,
+   lead:"Le poste Finance ouvre le site de l'entreprise. Ce trajet traverse tout : le siège, le NAT du routeur Rouge, le réseau étendu, puis le bâtiment Vert.",
+   before:"Il demande d'abord au serveur DNS, 192.168.100.10, l'adresse de impactinfluence.com. Cette requête reste dans le siège : le cœur la route du VLAN 40 vers le VLAN 100, sans passer par le routeur Rouge. Réponse : 192.168.90.80. Le navigateur choisit un numéro de conversation, par exemple 1025, et le service web attend sur le port 80.",
+   jury:"Ce seul test valide quatre briques à la fois : la résolution du nom par mon serveur DNS, le routage entre VLAN par mon switch de cœur, le routage entre sites par OSPF, et la réponse du serveur web. Au passage, la traduction surchargée du siège s'applique, comme à tout trafic qui quitte le siège.",
+   retain:["Les switchs de niveau 2 ne lisent que l'adresse matérielle et l'étiquette. Jamais l'IP.",
+     "Le cœur est le seul équipement du siège à lire l'IP. Il retire l'étiquette à l'arrivée et la repose au départ.",
+     "Le routeur Rouge est le seul endroit où les adresses IP changent : l'expéditeur à l'aller, le destinataire au retour.",
+     "La seule liste de filtrage vérifiée sur ce trajet est la liste 100, à l'entrée du routeur Rouge, au retour.",
+     "Le serveur ne voit jamais l'adresse du poste, et le poste ne voit jamais l'adresse publique du routeur."] },
+ { id:"vlan", name:"Finance vers la Direction", steps:S2,
+   lead:"Le poste Finance envoie un ping au poste de la Direction. C'est le routage entre deux VLAN, entièrement à l'intérieur du siège.",
+   before:"Deux VLAN sont deux réseaux différents : pour passer de l'un à l'autre, il faut router. Observe quel équipement le fait, et ce qui change, ou non, dans la trame.",
+   jury:"Le poste constate que la destination n'est pas dans son réseau, et remet le paquet à sa passerelle, l'interface virtuelle de son service sur le switch de cœur. Le cœur voit que le réseau de la Direction lui est directement branché, et fait ressortir le paquet par là. Aucun routeur n'intervient.",
+   retain:["Aucun routeur et aucun NAT : les adresses IP ne changent jamais sur ce trajet.",
+     "Le cœur est le seul à lire l'IP. Il retire l'étiquette 40 et pose l'étiquette 30.",
+     "C'est ce passage obligé par le cœur qui en fait le bon endroit pour filtrer entre les services."] },
+ { id:"bleu", name:"Accueil vers le serveur web", steps:S3,
+   lead:"Le poste de l'accueil, dans le bâtiment Bleu, ouvre le serveur web par son adresse. C'est l'exigence de l'étape 5 : un poste branché sur un routeur accède au serveur web.",
+   before:"Ce trajet fonctionne grâce à la passerelle que tu as corrigée sur ce poste. Observe par où il passe, et surtout par où il ne passe pas.",
+   jury:"Depuis le bâtiment Bleu, le serveur web est accessible par son adresse. Le routeur Bleu l'atteint directement par la liaison Bleu-Vert, grâce à OSPF, sans passer par le siège. C'est l'exigence de l'étape 5 du plan d'action.",
+   retain:["Ce trajet ne passe pas par le siège : ni NAT, ni liste de filtrage.",
+     "Les adresses IP ne changent jamais, et le serveur voit la vraie adresse du poste.",
+     "Il fonctionne grâce aux passerelles que tu as corrigées sur les postes satellites."] },
+ { id:"acl", name:"Accueil vers le DNS, bloqué", steps:S4,
+   lead:"Le poste de l'accueil veut résoudre le nom du site. Sa requête vers le serveur DNS va être détruite par ta liste 100 : c'est ta démonstration de filtrage.",
+   before:"Condition pour que ce trajet se produise : le poste de l'accueil doit connaître le serveur DNS. Renseigne 192.168.100.10 dans sa configuration. Aujourd'hui, ce champ est vide dans ta maquette.",
+   jury:"Le filtre du serveur DNS est sur le routeur du siège, en entrée sur ses deux liaisons vers les autres bâtiments. Les postes du siège n'ont jamais besoin de le traverser pour joindre le DNS, ceux des autres bâtiments y sont obligés. Et la preuve que c'est bien ma liste qui bloque, c'est son compteur.",
+   retain:["La liste 100 est lue à l'entrée du routeur, avant même le choix de la route.",
+     "Elle bloque le service DNS, pas toute communication : le même poste atteint le serveur web par son adresse.",
+     "La preuve à l'écran : show access-lists sur le routeur Rouge, le compteur de la ligne deny augmente."] }
+];
+
+/* ---------- carte ---------- */
+const NS="http://www.w3.org/2000/svg";
+const svg=document.getElementById('map');
+const pos={}; TOPO.devices.forEach(d=>pos[d.n]=d);
+const xs=TOPO.devices.map(d=>d.x), ys=TOPO.devices.map(d=>d.y);
+const pad=95, minX=Math.min(...xs)-pad, maxX=Math.max(...xs)+pad, minY=Math.min(...ys)-pad+20, maxY=Math.max(...ys)+pad+35;
+svg.setAttribute('viewBox',`${minX} ${minY} ${maxX-minX} ${maxY-minY}`);
+const el=(t,a={},p=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+const gLinks=el('g'), gFlow=el('g'), gDev=el('g'), gCap=el('g');
+const linkKey=(a,b)=>[a,b].sort().join('|');
+const linkEls={};
+let lacpIdx=0;
+TOPO.links.forEach(l=>{
+  const A=pos[l.a], B=pos[l.b]; let off=0;
+  if(linkKey(l.a,l.b)==='DISTRI-DROITE|DISTRI-GAUCHE'){off=(lacpIdx-1.5)*9; lacpIdx++;}
+  const line=el('line',{x1:A.x,y1:A.y+off,x2:B.x,y2:B.y+off,class:'lk '+l.k},gLinks);
+  (linkEls[linkKey(l.a,l.b)]=linkEls[linkKey(l.a,l.b)]||[]).push(line);
+});
+(()=>{const A=pos['DISTRI-GAUCHE'],B=pos['DISTRI-DROITE'];
+  const t=el('text',{x:(A.x+B.x)/2,y:A.y-34,'text-anchor':'middle','font-size':'19','font-weight':'700',fill:'var(--trunk)','font-family':'var(--font)'},gLinks);
+  t.textContent='LACP, 4 câbles';})();
+const devEls={};
+TOPO.devices.forEach(d=>{
+  const g=el('g',{class:'dev '+d.k,'data-n':d.n},gDev);
+  const halo=el('circle',{cx:d.x,cy:d.y,r:d.k==='host'?40:48,class:'halo'},g);
+  if(d.k==='router') el('circle',{cx:d.x,cy:d.y,r:30,class:'shape'},g);
+  else if(d.k==='core') el('rect',{x:d.x-50,y:d.y-26,width:100,height:52,rx:10,class:'shape'},g);
+  else if(d.k==='distri') el('rect',{x:d.x-44,y:d.y-22,width:88,height:44,rx:9,class:'shape'},g);
+  else if(d.k==='switch') el('rect',{x:d.x-36,y:d.y-18,width:72,height:36,rx:7,class:'shape'},g);
+  else {el('rect',{x:d.x-26,y:d.y-20,width:52,height:34,rx:4,class:'shape'},g); el('rect',{x:d.x-10,y:d.y+14,width:20,height:6,class:'shape'},g);}
+  const ty=d.y+(d.k==='router'?58:d.k==='core'?56:d.k==='distri'?52:d.k==='host'?50:46);
+  const t=el('text',{x:d.x,y:ty,'text-anchor':'middle'},g); t.textContent=d.n;
+  devEls[d.n]={g,halo};
+  g.style.cursor='pointer';
+  g.addEventListener('click',()=>{
+    const st=sc().steps, cur=st[step-1], dir=cur?cur.dir:st[0].dir;
+    const hit=st.find(s=>s.dev===d.n&&s.dir===dir)||st.find(s=>s.dev===d.n);
+    if(hit) go(hit.n);
+  });
+});
+
+/* ---------- etat ---------- */
+let si=0, step=0, train=false;
+const answered={};   // cle "trajet:etape" -> {picked, ok}
+try{ const v=JSON.parse(localStorage.getItem('trajet-v2')||'{}');
+  if(v.si>=0&&v.si<SCEN.length) si=v.si; if(v.step>=0&&v.step<=SCEN[si].steps.length) step=v.step; train=!!v.train; }catch(e){}
+const sc=()=>SCEN[si];
+const last=()=>sc().steps.length;
+
+const tabs=document.getElementById('tabs');
+SCEN.forEach((s,i)=>{const b=document.createElement('button');b.className='tab';b.textContent=s.name;
+  b.addEventListener('click',()=>{si=i;step=0;buildRail();render();});tabs.appendChild(b);});
+const trainBtn=document.getElementById('train');
+trainBtn.addEventListener('click',()=>{ if(mode==='loupe') lguess=!lguess; else train=!train; render(); });
+const idx=()=>mode==='sout'?card:mode==='loupe'?lstep:step;
+document.getElementById('prev').addEventListener('click',()=>go(idx()-1));
+document.getElementById('next').addEventListener('click',()=>go(idx()+1));
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('input,button.opt')) return;
+  if(e.key==='ArrowRight') go(idx()+1); if(e.key==='ArrowLeft') go(idx()-1); });
+
+const DIRNAME={aller:"Aller",retour:"Retour",trajet:"Trajet"};
+function buildRail(){
+  const rail=document.getElementById('rail'); rail.innerHTML='';
+  const b0=document.createElement('button'); b0.className='dot'; b0.dataset.step=0; b0.textContent='0';
+  b0.setAttribute('aria-label','Départ'); rail.appendChild(b0);
+  const groups=[...new Set(sc().steps.map(s=>s.dir))];
+  groups.forEach(g=>{
+    const w=document.createElement('div'); w.className='leg';
+    const lab=document.createElement('span'); lab.className='leg-name'; lab.textContent=DIRNAME[g]; w.appendChild(lab);
+    sc().steps.filter(s=>s.dir===g).forEach(s=>{const b=document.createElement('button');b.className='dot';b.dataset.step=s.n;b.textContent=s.n;
+      b.setAttribute('aria-label',`Étape ${s.n}, ${s.title}`);w.appendChild(b);});
+    rail.appendChild(w);
+  });
+  rail.querySelectorAll('.dot').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.step)));
+}
+
+const LABELS={ms:"MAC source",md:"MAC destination",tag:"Étiquette",is:"IP source",id:"IP destination"};
+const FIELDS=['ms','md','tag','is','id'];
+
+function renderTrajet(){
+  const st=sc().steps, cur=st[step-1];
+  const PATH=new Set(st.map(s=>s.dev));
+  document.querySelectorAll('.tab').forEach((b,i)=>b.setAttribute('aria-pressed',i===si?'true':'false'));
+  trainBtn.setAttribute('aria-pressed',train?'true':'false');
+  trainBtn.textContent = train ? 'Mode entraînement activé' : 'Mode entraînement';
+  // carte
+  Object.entries(devEls).forEach(([n,o])=>{ o.g.classList.toggle('off', step>0 && !PATH.has(n)); o.halo.classList.remove('on','bad'); });
+  Object.values(linkEls).flat().forEach(l=>l.classList.toggle('off', step>0));
+  if(step>0) st.forEach(s=>{ if(s.next) (linkEls[linkKey(s.dev,s.next)]||[]).forEach(l=>l.classList.remove('off')); });
+  gFlow.innerHTML=''; gCap.innerHTML='';
+  if(cur){
+    const h=devEls[cur.dev].halo; void h.getBoundingClientRect(); h.classList.add('on'); if(cur.dropped) h.classList.add('bad');
+    if(cur.next){
+      const A=pos[cur.dev], B=pos[cur.next];
+      const col = cur.serial ? 'var(--serial)' : (cur.cap.startsWith('étiquette') ? 'var(--trunk)' : 'var(--ink)');
+      const dx=B.x-A.x, dy=B.y-A.y, L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L, px=-uy, py=ux;
+      const x1=A.x+ux*48, y1=A.y+uy*48, x2=B.x-ux*58, y2=B.y-uy*58;
+      el('line',{x1,y1,x2,y2,stroke:col,'stroke-width':'7','stroke-linecap':'round',opacity:'.22'},gFlow);
+      el('line',{x1,y1,x2:x2-ux*14,y2:y2-uy*14,class:'flow',stroke:col},gFlow);
+      const bx=x2-ux*26, by=y2-uy*26;
+      el('polygon',{points:`${x2},${y2} ${bx+px*13},${by+py*13} ${bx-px*13},${by-py*13}`,fill:col},gFlow);
+      capsule(cur.cap, col, x1,y1,x2,y2, px,py);
+    } else if(cur.dropped){
+      const A=pos[cur.dev];
+      capsule('détruit par la liste 100','var(--bad)', A.x-40,A.y, A.x+40,A.y, 0,1, 70);
+    }
+  }
+  // rail
+  document.querySelectorAll('#rail .dot').forEach(b=>{const n=+b.dataset.step;
+    b.removeAttribute('aria-current'); if(n===step) b.setAttribute('aria-current','step'); b.classList.toggle('done', n<step);});
+  document.getElementById('prev').disabled = step===0; document.getElementById('prev').textContent='Étape précédente';
+  const nx=document.getElementById('next'); nx.disabled = step===last();
+  const nextStep=st[step]; 
+  nx.textContent = step===0 ? 'Commencer le trajet' : (cur && nextStep && cur.dir!==nextStep.dir ? 'Commencer le retour' : 'Étape suivante');
+  document.getElementById('side').innerHTML = step===0 ? introHTML() : stepHTML(cur);
+  bindQuiz(cur);
+  // petit ecran : recentrer la carte
+  if(cur){ const box=document.querySelector('.map'); if(box.scrollWidth>box.clientWidth){
+    const vb=svg.viewBox.baseVal, pxl=(pos[cur.dev].x-vb.x)/vb.width*svg.clientWidth;
+    const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    box.scrollTo({left:Math.max(0,pxl-box.clientWidth/2),behavior:reduce?'auto':'smooth'}); } }
+  try{localStorage.setItem('trajet-v2',JSON.stringify({si,step,train}));}catch(e){}
+  setTop();
+}
+
+function capsule(text,col,x1,y1,x2,y2,px,py,forceOff){
+  const g=el('g',{class:'cap'},gCap);
+  const txt=el('text',{x:0,y:0,'text-anchor':'middle',fill:col},g); txt.textContent=text;
+  const w=txt.getComputedTextLength()+30, hh=20;
+  const sgn=(px>0?1:-1), off=forceOff||(Math.abs(px)*(w/2)+Math.abs(py)*hh+14);
+  const mx=x1+(x2-x1)*.5+px*sgn*off, my=y1+(y2-y1)*.5+py*sgn*off;
+  txt.setAttribute('x',mx); txt.setAttribute('y',my+8);
+  const r=el('rect',{x:mx-w/2,y:my-hh,width:w,height:hh*2,rx:hh,fill:'var(--panel)',stroke:col},g);
+  g.insertBefore(r,txt);
+}
+
+function introHTML(){
+  const s=sc();
+  return `<div class="intro">
+  <p class="eyebrow">Avant le départ</p>
+  <h2>${s.name}</h2>
+  <p class="say">${s.lead}</p>
+  <p class="say">${s.before}</p>
+  <h3 class="sub">Trois règles pour tous les trajets</h3>
+  <ul>
+    <li>Les adresses IP ne changent qu'à un seul endroit : le NAT du routeur Rouge.</li>
+    <li>Les adresses matérielles changent à chaque routeur, car elles ne valent que sur un câble.</li>
+    <li>L'étiquette 802.1Q n'existe que sur les liens trunk, en bleu sur la carte.</li>
+  </ul>
+  <h3 class="sub">La couleur des câbles</h3>
+  <div class="key">
+    <span class="sw trunk"></span><span>Trunk : la trame y porte l'étiquette de son VLAN</span>
+    <span class="sw access"></span><span>Access : un seul VLAN, sans étiquette</span>
+    <span class="sw routed"></span><span>Port routé entre le cœur et le routeur Rouge</span>
+    <span class="sw serial"></span><span>Liaison série entre routeurs, sans adresse matérielle</span>
+    <span class="sw plain"></span><span>Bâtiments Bleu et Vert, sans VLAN configuré</span>
+  </div>
+  <p class="kbd">Le mode entraînement te demande, à chaque étape, quels champs de la trame vont changer, avant de te montrer la réponse. Navigue avec les boutons, les numéros, ou les flèches du clavier.</p>
+  </div>`;
+}
+
+function quizzable(s){ return train && !s.created && !s.arrival && !s.dropped; }
+
+function stepHTML(s){
+  const key=`${si}:${s.n}`, ans=answered[key];
+  const hide = quizzable(s) && !ans;
+  const pills = hide ? '' : s.pills.map(([k,t])=>`<span class="pill ${k}">${t}</span>`).join('');
+  const say = hide ? `<p class="say hint2">Regarde la carte : par quel type de câble la trame arrive-t-elle ici, et par lequel repart-elle ? L'équipement lit-il seulement l'adresse matérielle, ou aussi l'IP ?</p>`
+                   : s.say.map(([k,t])=>`<p class="say"><b>${k}</b> ${t}</p>`).join('');
+  let frame='';
+  if(quizzable(s) && !ans){
+    frame=`<div class="quiz"><h3>À toi : quels champs de la trame vont changer ici ?</h3>
+      <p class="hint">Coche les champs modifiés. Si rien ne change, ne coche rien.</p>
+      ${FIELDS.map(k=>`<label class="opt"><input type="checkbox" value="${k}"> ${LABELS[k]}</label>`).join('')}
+      <button class="btn primary" id="check">Vérifier ma réponse</button></div>`;
+  } else {
+    const where = s.dropped ? 'Le paquet est détruit ici' : s.arrival ? 'La trame reçue' : (s.created ? 'La trame créée ici' : 'La trame en sortie de cet équipement');
+    const rows=FIELDS.map(k=>{ const chg=s.chg.includes(k)&&!s.created;
+      return `<div class="row${chg?' chg':''}"><span class="k">${LABELS[k]}${chg?'<span class="mod">modifié ici</span>':''}</span><span class="v">${s.f[k]}</span></div>`;}).join('');
+    let verdict='';
+    if(ans){
+      const good=new Set(s.chg), pick=new Set(ans.picked);
+      const miss=[...good].filter(k=>!pick.has(k)).map(k=>LABELS[k]), extra=[...pick].filter(k=>!good.has(k)).map(k=>LABELS[k]);
+      verdict = ans.ok ? `<p class="verdict ok">Exact. ${good.size?'':'Rien ne change à cette étape.'}</p>`
+        : `<p class="verdict ko">Pas tout à fait.${miss.length?` Tu as oublié : ${miss.join(', ')}.`:''}${extra.length?` En trop : ${extra.join(', ')}.`:''}</p><button class="btn" id="retry">Réessayer cette étape</button>`;
+    }
+    const nothing=(!s.created && !s.dropped && s.chg.length===0) ? `<p class="note">Rien ne change dans la trame à cette étape.</p>` : '';
+    frame=`${verdict}<div class="frame${s.dropped?' dead':''}"><h3>${where}</h3>${rows}</div>${nothing}`;
+  }
+  const end = s.n===last() ? `<div class="recap"><h3>Ce qu'il faut retenir</h3><ul>${sc().retain.map(r=>`<li>${r}</li>`).join('')}</ul>
+      <h3>Pour le jury</h3><p class="jury">${sc().jury}</p></div>` : '';
+  const dirTxt = s.dir==='trajet' ? '' : (s.dir==='aller'?'Aller, ':'Retour, ');
+  return `<p class="eyebrow">${dirTxt ? dirTxt+'étape' : 'Étape'} ${s.n} sur ${last()}</p>
+  <h2>${s.title}</h2><p class="ports">${s.ports}</p><div class="pills">${pills}</div>${say}
+  ${frame}${s.note && !hide ?`<p class="note">${s.note}</p>`:''}${end}`;
+}
+
+function bindQuiz(s){
+  const r=document.getElementById('retry');
+  if(r&&s) r.addEventListener('click',()=>{ delete answered[`${si}:${s.n}`]; render(); });
+  const b=document.getElementById('check'); if(!b||!s) return;
+  b.addEventListener('click',()=>{
+    const picked=[...document.querySelectorAll('.quiz input:checked')].map(i=>i.value);
+    const good=new Set(s.chg); const ok=picked.length===good.size && picked.every(k=>good.has(k));
+    answered[`${si}:${s.n}`]={picked,ok}; render();
+  });
+}
+
+function setTop(){ const h=document.querySelector('.top').offsetHeight; document.documentElement.style.setProperty('--top-h',h+'px'); }
+window.addEventListener('resize',setTop);
+if(window.ResizeObserver) new ResizeObserver(()=>setTop()).observe(document.querySelector('.top'));
+/* grand ecran : la page reste fixe, seuls la carte et le panneau defilent */
+[document.body,document.documentElement].forEach(n=>n.addEventListener('scroll',()=>{ if(window.innerWidth>900 && n.scrollTop) n.scrollTop=0; }));
+function go(n){ if(mode==='loupe'){ loupeGo(n); return; } if(mode==='sout') card=Math.max(1,Math.min(SOUT.length,n)); else step=Math.max(0,Math.min(last(),n)); render(); }
+function render(){
+  document.querySelectorAll('.mode').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode?'true':'false'));
+  document.getElementById('tabs').hidden = mode!=='trajets';
+  document.getElementById('ltabs').hidden = mode!=='loupe';
+  document.getElementById('train').hidden = mode==='sout';
+  document.getElementById('chrono').hidden = mode!=='sout';
+  document.getElementById('addrBtn').hidden = mode==='loupe';
+  document.getElementById('map').toggleAttribute('hidden', mode==='loupe');
+  document.getElementById('loupe').toggleAttribute('hidden', mode!=='loupe');
+  if(mode==='sout') renderSout(); else if(mode==='loupe'){ renderLoupe(); saveSout(); } else { renderTrajet(); saveSout(); }
+  const navKey = mode==='sout' ? 's'+card : mode==='loupe' ? 'l'+lphase+':'+lstep : 't'+si+':'+step;
+  if(navKey!==window.__navKey){ window.__navKey=navKey; document.getElementById('side').scrollTop=0;
+  }
+  if(window.innerWidth>900){ window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0; }
+  drawAddr(); setTop();
+}
+const SIEGE_SW=["SW-DNS","SW-INFO","SW-FINANCE","SW-COM","SW-RH","SW-DIRECTION"];
+const SIEGE_PC=["SRV-DNS","INFORMATIQUE","FINANCE","COMMERCIAL","RH","DIRECTION"];
+
+const SOUT = [
+ { id:"adr", part:"presentation", title:"L'architecture et l'adressage", dur:180,
+   req:"Vous présenterez et justifierez vos choix en matière d'adressage réseau.",
+   hl:{devs:["Rouge","Bleu","Vert","CORE-L3"], kinds:["serial"]},
+   pins:[{link:["Rouge","Bleu"],x:405,y:352,t:"/30 en .32 : Rouge .33, Bleu .34"},
+         {link:["Bleu","Vert"],x:733,y:112,t:"/30 en .36 : Bleu .37, Vert .38"},
+         {link:["Vert","Rouge"],x:985,y:248,t:"/30 en .40 : Vert .41, Rouge .42"},
+         {dev:"CORE-L3",x:985,y:513,t:"/24 par VLAN, passerelle en .1"}],
+   show:[{w:"Ton schéma",c:"les trois bâtiments, le triangle des liaisons série, les trois niveaux du siège"},
+         {w:"Puis sur la carte",c:"une liaison série et un VLAN, pour justifier chaque masque"}],
+   see:"Le triangle entre les trois routeurs, le siège en trois niveaux, et les bâtiments Bleu et Vert plats.",
+   say:["J'ai concentré la complexité là où elle se justifie. Le siège regroupe cinq services : trois niveaux, des VLAN, du filtrage et de la redondance. Le Bleu et le Vert n'ont que deux salles, déjà séparées physiquement par deux interfaces du routeur : ils sont plats. Mes trois routeurs forment un triangle : si un lien tombe, le trafic passe par l'autre côté.",
+        "Une liaison ne relie que deux routeurs : deux adresses utilisables, plus l'adresse de réseau et la diffusion, donc un /30. J'en ai créé trois dans mon bloc /27, en .32, .36 et .40 : douze adresses utilisées, vingt en réserve. En interne, un /24 par réseau pour la marge et la lisibilité, avec le numéro du VLAN en troisième octet et la passerelle en .1.",
+        "En IPv6, même logique, en double pile : un /64 par réseau, le numéro du VLAN dans le quatrième groupe, une adresse globale et une adresse lien-local sur chaque interface."],
+   qa:[["Pourquoi pas un /24 sur les liaisons, comme à l'intérieur ?","Sur une liaison, deux adresses suffisent. Un /24 gaspillerait deux cent cinquante-deux adresses publiques, qui sont rares et coûteuses."],
+       ["On vous a fourni un /64 en IPv6. Comment avez-vous quatorze réseaux ?","La norme veut un /64 par réseau, notamment pour l'autoconfiguration des postes. J'ai numéroté mes réseaux dans le quatrième groupe, ce qui revient à travailler dans un /48. En production, je demanderais un /48 au fournisseur d'accès, ce qui est la pratique courante."]] },
+
+ { id:"routes", part:"presentation", title:"Démonstration : les routes", dur:90,
+   req:"… démontrant le bon fonctionnement de vos configurations : des routes.",
+   hl:{devs:["Rouge","Bleu","Vert"], kinds:["serial"]},
+   pins:[{dev:"Vert",x:1120,y:160,t:"show ip ospf neighbor"},{dev:"Vert",x:1120,y:222,t:"show ip route"}],
+   show:[{w:"Sur le routeur Vert",c:"show ip ospf neighbor"},{w:"Sur le routeur Vert",c:"show ip route"}],
+   see:"Deux voisins, tous deux à l'état FULL : 192.168.70.254, l'identifiant du Bleu, et 192.168.99.1, celui du Rouge. Dans la table de routage, les réseaux appris par OSPF sont marqués O, et les réseaux du siège O E2, parce qu'ils ont été injectés par redistribution.",
+   say:["J'ai choisi OSPF parce qu'avec trois sites en triangle, il détecte une coupure en quelques secondes et recalcule un chemin de secours par l'autre côté. Les VLAN du siège étant derrière le switch de cœur, le routeur Rouge les apprend par six routes statiques, et les redistribue dans OSPF pour les annoncer aux autres bâtiments."],
+   qa:[["Pourquoi à la fois OSPF et des routes statiques ?","Les rôles sont différents. OSPF relie les sites et gère les pannes. Les routes statiques font connaître au routeur Rouge les VLAN situés derrière le cœur, et la redistribution les annonce aux autres bâtiments."],
+       ["Que se passe-t-il si le câble entre le Rouge et le Vert est coupé ?","OSPF le détecte et fait passer le trafic par le Bleu. Avec des routes statiques seules, le réseau resterait coupé jusqu'à une intervention humaine."]] },
+
+ { id:"vlan", part:"presentation", title:"Démonstration : les VLAN", dur:90,
+   req:"… démontrant le bon fonctionnement de vos configurations : des VLAN.",
+   hl:{devs:["CORE-L3","DISTRI-GAUCHE","DISTRI-DROITE",...SIEGE_SW,...SIEGE_PC], kinds:["trunk","access"]},
+   pins:[{dev:"CORE-L3",x:930,y:470,t:"show vlan brief"},{dev:"CORE-L3",x:930,y:532,t:"show ip dhcp binding"},
+         {dev:"RH",x:1187,y:1012,t:"IP Configuration : DHCP"}],
+   show:[{w:"Sur le switch de cœur",c:"show vlan brief"},{w:"Sur le PC RH, Desktop, IP Configuration",c:"DHCP coché"},{w:"Sur le switch de cœur",c:"show ip dhcp binding"}],
+   see:"La liste des VLAN : 10, 20, 30, 40, 50, 99 MANAGEMENT et 100. Sur le poste RH, une adresse en 192.168.20 reçue automatiquement, la passerelle 192.168.20.1 et le DNS 192.168.100.10. Sur le cœur, la table des adresses attribuées.",
+   say:["Chaque service a son VLAN, donc son propre réseau : les services sont cloisonnés. Le switch de cœur route entre les VLAN grâce à une interface virtuelle par VLAN, qui sert de passerelle. Il distribue aussi les adresses : une demande d'adresse est une diffusion, qui ne franchit pas un VLAN, et le cœur est présent dans chacun."],
+   qa:[["Le cahier des charges demandait le DHCP sur les distributions. Pourquoi sur le cœur ?","Une demande d'adresse est une diffusion, qui reste dans son VLAN. Le cœur a déjà une interface et la passerelle dans chaque VLAN : un seul serveur suffit. Sur les distributions, il aurait fallu leur donner une adresse dans chaque VLAN, et partager les plages entre deux serveurs pour ne pas attribuer deux fois la même adresse."],
+       ["Comment une trame passe-t-elle de la Finance à la Direction ?","Le poste l'envoie à sa passerelle, l'interface virtuelle du cœur. Le cœur voit que le réseau de la Direction lui est branché, et la fait ressortir étiquetée VLAN 30. Aucun routeur n'intervient."]],
+   trajets:["vlan"] },
+
+ { id:"internet", part:"presentation", title:"Démonstration : l'accès à Internet", dur:90,
+   req:"… démontrant le bon fonctionnement de vos configurations : de l'accès à Internet.",
+   hl:{devs:["INFORMATIQUE","SW-INFO","DISTRI-GAUCHE","CORE-L3","Rouge","Vert"],
+       pairs:[["INFORMATIQUE","SW-INFO"],["SW-INFO","DISTRI-GAUCHE"],["DISTRI-GAUCHE","CORE-L3"],["CORE-L3","Rouge"],["Rouge","Vert"]]},
+   pins:[{dev:"INFORMATIQUE",x:371,y:1005,t:"ping 132.186.32.41"},{dev:"Rouge",x:455,y:377,t:"show ip nat translations"},
+         {link:["Vert","Rouge"],x:985,y:262,t:"cible : 132.186.32.41"}],
+   show:[{w:"Sur le PC INFORMATIQUE, Command Prompt",c:"ping 132.186.32.41"},{w:"Sur le routeur Rouge",c:"show ip nat translations"}],
+   see:"Le ping répond : c'est l'interface du routeur Vert qui fait face au siège. Dans la table du routeur Rouge, chaque ligne associe l'adresse privée du poste, en 192.168.10, à l'adresse publique 132.186.32.33. Lance le ping deux fois : le premier échoue souvent, le temps que les équipements apprennent les adresses matérielles.",
+   say:["Le NAT surchargé du routeur Rouge remplace toutes mes adresses privées par une seule adresse publique, et distingue les conversations par des numéros de port. Il n'y a pas d'Internet réel sur cette maquette : le réseau étendu entre mes bâtiments joue ce rôle, et le plan d'action demande justement que les VLAN puissent joindre les routeurs de l'infrastructure."],
+   qa:[["Tous les VLAN peuvent-ils joindre les routeurs ?","Oui : c'est ce que demande l'étape 3 du plan d'action, et je peux le montrer depuis n'importe quel poste du siège."],
+       ["Où est le NAT statique prévu par le plan d'action ?","Je l'ai configuré et testé : il réécrivait l'adresse de la réponse du serveur, et les postes n'accédaient plus au site. Pour qu'il serve, les postes auraient dû joindre le serveur par son adresse publique, annoncée jusqu'au bâtiment Vert. J'ai retenu le routage direct, qui remplit l'objectif de l'étape 5 : l'accès des postes au serveur."]],
+   trajets:["web"] },
+
+ { id:"web", part:"presentation", title:"Démonstration : l'accès au serveur web", dur:90,
+   req:"… démontrant le bon fonctionnement de vos configurations : de l'accès au serveur web.",
+   hl:{devs:["FINANCE","SW-FINANCE","DISTRI-GAUCHE","CORE-L3","Rouge","Vert","SW-WEB","SRV-WEB","SW-DNS","SRV-DNS","ACCUEIL","SW-ACCUEIL","Bleu"],
+       pairs:[["FINANCE","SW-FINANCE"],["SW-FINANCE","DISTRI-GAUCHE"],["DISTRI-GAUCHE","CORE-L3"],["CORE-L3","Rouge"],["Rouge","Vert"],["Vert","SW-WEB"],["SW-WEB","SRV-WEB"],["DISTRI-GAUCHE","SW-DNS"],["SW-DNS","SRV-DNS"],["ACCUEIL","SW-ACCUEIL"],["SW-ACCUEIL","Bleu"],["Bleu","Vert"]]},
+   pins:[{dev:"FINANCE",x:635,y:1005,t:"impactinfluence.com"},{dev:"ACCUEIL",x:215,y:150,t:"http://192.168.90.80"},
+         {dev:"SRV-DNS",x:240,y:1005,t:"deux enregistrements"}],
+   show:[{w:"Sur le PC FINANCE, Web Browser",c:"impactinfluence.com"},{w:"Sur le PC FINANCE, Web Browser",c:"impactinfluence6.com"},{w:"Sur le PC ACCUEIL, Web Browser",c:"http://192.168.90.80"}],
+   see:"La page s'affiche dans les trois cas : par son nom, en IPv4 puis en IPv6, depuis le siège, et par son adresse depuis le bâtiment Bleu. Tape les noms sans le préfixe www : aucun enregistrement ne le porte.",
+   say:["Ce test valide quatre briques : la résolution du nom par mon DNS, le routage entre VLAN par le cœur, le routage entre sites par OSPF, et la réponse du serveur. Depuis le bâtiment Bleu, le serveur est accessible par son adresse, sans passer par le siège : c'est l'exigence de l'étape 5 du plan d'action."],
+   qa:[["Pourquoi deux noms de domaine ?","Un nom par version, pour tester l'IPv4 et l'IPv6 séparément. Sur un vrai serveur, un seul nom porterait les deux enregistrements, et le client choisirait."],
+       ["Pourquoi le nom ne fonctionne-t-il pas depuis le bâtiment Bleu ?","Parce que ma liste 100 réserve le DNS au réseau local du siège, comme l'exige le cahier des charges. Le serveur web, lui, reste accessible par son adresse."]],
+   trajets:["web","bleu"] },
+
+ { id:"lacp", part:"presentation", title:"Démonstration : le load-balancing", dur:60,
+   req:"… démontrant le bon fonctionnement de vos configurations : du load-balancing entre les switchs.",
+   hl:{devs:["CORE-L3","DISTRI-GAUCHE","DISTRI-DROITE",...SIEGE_SW], kinds:["trunk"]},
+   pins:[{dev:"DISTRI-GAUCHE",x:410,y:600,t:"show etherchannel summary"},{dev:"DISTRI-DROITE",x:1030,y:600,t:"show etherchannel summary"}],
+   show:[{w:"Sur DISTRI-GAUCHE",c:"show etherchannel summary"},{w:"Sur DISTRI-DROITE",c:"show etherchannel summary"}],
+   see:"Po1(SU), le protocole LACP, et quatre ports suivis de (P), de Gig1/0/2 à Gig1/0/5. Le même affichage des deux côtés prouve que la négociation a abouti entre les deux équipements.",
+   say:["Sans LACP, le protocole anti-boucle bloquerait trois de mes quatre câbles. LACP les réunit en une liaison logique : la charge se répartit, et une rupture de câble ne coupe rien. Et chaque switch d'accès est relié aux deux distributions, pour survivre à la panne de l'une d'elles."],
+   qa:[["Quelle différence entre LACP et la topologie en V ?","LACP regroupe des câbles parallèles vers le même équipement : il protège contre la rupture d'un câble. La topologie en V relie chaque switch d'accès à deux distributions : elle protège contre la panne d'un équipement."],
+       ["Que se passe-t-il si une distribution tombe ?","Le protocole anti-boucle débloque les liens vers l'autre en quelques secondes. Aucun service n'est coupé, parce que mes deux distributions sont configurées à l'identique."]] },
+
+ { id:"acl", part:"presentation", title:"Démonstration : les ACL", dur:120,
+   req:"… démontrant le bon fonctionnement de vos configurations : des ACL.",
+   hl:{devs:["CORE-L3","Rouge","Bleu","ACCUEIL","SW-ACCUEIL"], pairs:[["ACCUEIL","SW-ACCUEIL"],["SW-ACCUEIL","Bleu"],["Bleu","Rouge"]]},
+   pins:[{dev:"CORE-L3",x:900,y:513,t:"show access-lists"},{dev:"Rouge",x:400,y:345,t:"show ip interface Serial0/1/0"},
+         {dev:"Rouge",x:400,y:407,t:"show access-lists : le compteur"},{dev:"ACCUEIL",x:215,y:150,t:"le nom échoue, l'adresse répond"}],
+   pre:"Renseigne le DNS 192.168.100.10 sur le PC ACCUEIL. Sans lui, aucune requête de nom ne part, et ta liste n'a rien à bloquer.",
+   show:[{w:"Sur le switch de cœur",c:"show access-lists"},{w:"Sur le routeur Rouge",c:"show ip interface Serial0/1/0"},
+         {w:"Sur le PC ACCUEIL, Web Browser",c:"impactinfluence.com, puis http://192.168.90.80"},{w:"Sur le routeur Rouge",c:"show access-lists"}],
+   see:"Sur le cœur, tes listes 110 et 120. Sur le routeur Rouge, la liste 100 appliquée en entrée. Depuis l'accueil, le nom échoue alors que l'adresse répond. Et le compteur de la ligne deny de la liste 100 a augmenté.",
+   say:["Mes listes du cœur traduisent les règles de cloisonnement du cahier des charges, mais elles ne sont pas appliquées, et show ip interface le montre. En les relisant, je les corrigerais avant de les appliquer : elles bloqueraient les réponses vers l'Informatique, les pings vers les routeurs demandés à l'étape 3, et les demandes DHCP.",
+        "En revanche, ma liste 100 fonctionne. Elle est sur le routeur du siège, en entrée sur ses liaisons vers les autres bâtiments, et ferme le DNS à l'extérieur du siège. Son compteur le prouve."],
+   qa:[["Pourquoi la liste du DNS est-elle sur le routeur, et pas sur le cœur ?","Les postes du siège n'ont jamais besoin de passer par le routeur pour joindre le DNS. Ceux des autres bâtiments sont obligés de le traverser. Le filtre à l'entrée du routeur sépare donc exactement l'intérieur de l'extérieur."],
+       ["Montrez-moi que la Finance ne peut pas joindre l'Informatique.","Je dis honnêtement que mes listes ne sont pas appliquées, je le montre avec show ip interface vlan 40, et j'explique les trois corrections qu'elles demanderaient. Puis j'enchaîne sur la liste 100, qui, elle, fonctionne."]],
+   trajets:["acl"] },
+
+ { id:"preco", part:"presentation", title:"Les préconisations de sécurité", dur:120,
+   req:"Vous présenterez et justifierez vos préconisations adaptées pour ce réseau en matière de cybersécurité.",
+   hl:{devs:["SW-ACCUEIL","SW-SHOWROOM","SW-REUNION","ACCUEIL","SHOWROOM","REUNION","DISTRI-GAUCHE","DISTRI-DROITE","CORE-L3"],
+       pairs:[["ACCUEIL","SW-ACCUEIL"],["SHOWROOM","SW-SHOWROOM"],["REUNION","SW-REUNION"]]},
+   pins:[{dev:"SW-ACCUEIL",x:319,y:128,t:"port-security"},{dev:"SW-SHOWROOM",x:313,y:212,t:"port-security"},
+         {dev:"SW-REUNION",x:1117,y:242,t:"port-security"},{dev:"DISTRI-GAUCHE",x:410,y:600,t:"administration dans le VLAN 10"},
+         {dev:"CORE-L3",x:960,y:513,t:"VLAN 99 MANAGEMENT déjà créé"}],
+   show:[{w:"Sur une distribution",c:"show running-config, interface Vlan10"},{w:"Sur SW-SHOWROOM",c:"show running-config"}],
+   see:"L'adresse d'administration de la distribution dans le VLAN 10, un VLAN d'utilisateurs. Et les vingt-quatre ports du showroom actifs, sans aucune protection.",
+   say:["Trois mesures, issues du Guide d'hygiène informatique de l'ANSSI. Le SSH, mesure 21, contre le vol d'identifiants. Un VLAN d'administration, le 99, déjà déclaré sur mon cœur, mesure 28, contre la latéralisation d'une attaque. Le port-security à l'accueil, au showroom et en salle de réunion, mesure 26, contre l'intrusion physique. Aucune ne demande de matériel supplémentaire."],
+   fix:["La clé doit faire au moins 2048 bits, et non 1024.",
+        "Le filtrage du VLAN 99 se place sur le switch de cœur, qui route entre les VLAN, ou directement sur les lignes d'administration de chaque équipement. Pas sur le routeur.",
+        "Le VLAN 99 devra aussi être déclaré sur les deux distributions."],
+   qa:[["D'où viennent vos préconisations ?","Du Guide d'hygiène informatique de l'ANSSI : la mesure 21 pour les protocoles sécurisés, la mesure 28 pour le réseau d'administration dédié, et la mesure 26, qui demande de restreindre les prises réseau des zones ouvertes au public."],
+       ["Pourquoi filtrer le VLAN 99 sur le cœur, et pas sur le routeur ?","Parce que le trafic entre VLAN ne passe jamais par le routeur : c'est le switch de cœur qui le route."]] },
+
+ { id:"conclu", part:"presentation", title:"La conclusion", dur:60,
+   req:"Fin de la présentation des livrables.",
+   hl:{all:true}, pins:[],
+   show:[], see:"",
+   say:["Pour conclure : mon infrastructure relie les trois bâtiments par un triangle redondant, cloisonne les services du siège par des VLAN, et rend le serveur web accessible en IPv4 et en IPv6. J'ai assumé mes écarts au cahier des charges, chacun avec sa justification, et identifié la limite du simulateur sur le filtrage. Mes trois préconisations renforceraient la sécurité, sans aucun coût matériel."],
+   qa:[] },
+
+ { id:"ecarts", part:"discussion", title:"Les écarts à assumer", dur:0,
+   req:"L'évaluateur vous challengera sur vos méthodes et vos choix techniques.",
+   hl:{devs:["CORE-L3","Vert","SRV-DNS","SW-DNS"]},
+   pins:[{dev:"CORE-L3",x:1010,y:470,t:"DHCP ici, pas sur les distributions"},{dev:"CORE-L3",x:1010,y:532,t:"listes non appliquées"},
+         {dev:"Vert",x:1085,y:177,t:"NAT statique retiré"},{dev:"SRV-DNS",x:240,y:1005,t:"deux noms"}],
+   ecarts:[["Le DHCP sur les distributions","Tu l'as placé sur le cœur.","Le cœur a déjà une interface et la passerelle dans chaque VLAN : un seul serveur suffit. Sur les distributions, il aurait fallu une adresse par VLAN sur chacune, et deux serveurs à coordonner."],
+           ["Un NAT statique sur le routeur Vert","Tu l'as testé, puis retiré.","Pour qu'il serve, les postes auraient dû joindre le serveur par son adresse publique, annoncée jusqu'au bâtiment Vert. J'ai retenu le routage direct, qui remplit l'objectif de l'étape : l'accès des postes au serveur."],
+           ["Le serveur référencé par impactinfluence.com","Tu utilises deux noms, un par version.","Pour tester l'IPv4 et l'IPv6 séparément. Sur un vrai serveur, un seul nom porterait les deux enregistrements."],
+           ["Les règles de cloisonnement entre les VLAN","Tes listes sont écrites, mais pas appliquées.","Je le montre avec show ip interface. Avant de les appliquer, je les corrigerais : elles bloqueraient les réponses vers l'Informatique, les pings vers les routeurs et le DHCP."],
+           ["Un pool IPv6 /64","Tu utilises quatorze réseaux /64.","La norme veut un /64 par réseau. Cela revient à travailler dans un /48, ce qu'un fournisseur d'accès attribue normalement à une entreprise."]],
+   qa:[] },
+
+ { id:"quiz", part:"discussion", title:"Les questions du jury", dur:0,
+   req:"L'évaluateur vous challengera sur toutes les notions de votre présentation.",
+   hl:{all:true}, pins:[], qa:[] }
+];
+
+const QUIZ = [
+ {q:"Pourquoi trois architectures différentes selon les bâtiments ?", a:"J'ai concentré la complexité là où elle se justifie. Le siège a cinq services : trois niveaux, des VLAN, du filtrage. Le Bleu et le Vert ont deux salles, déjà séparées par deux interfaces du routeur : ils sont plats.", hl:["Rouge","Bleu","Vert","CORE-L3"]},
+ {q:"Pourquoi un /30 sur les liaisons entre routeurs ?", a:"Une liaison ne relie que deux routeurs : deux adresses utilisables, plus l'adresse de réseau et la diffusion. Quatre adresses, donc deux bits, donc un /30.", hl:["Rouge","Bleu","Vert"]},
+ {q:"Pourquoi un /24 à l'intérieur des bâtiments ?", a:"Pour la marge, afin qu'un service grandisse sans refaire l'adressage, et pour la lisibilité : le numéro du VLAN se retrouve dans le troisième octet.", hl:["CORE-L3"]},
+ {q:"Pourquoi OSPF plutôt que des routes statiques ?", a:"Avec trois sites en triangle, OSPF détecte une coupure et recalcule un chemin par l'autre côté. Une route statique ne le fera jamais.", hl:["Rouge","Bleu","Vert"]},
+ {q:"Pourquoi des routes statiques sur le routeur Rouge ?", a:"Les VLAN sont derrière le cœur, pas sur le routeur. Six routes statiques les lui apprennent, et la redistribution les annonce aux autres bâtiments.", hl:["Rouge","CORE-L3"]},
+ {q:"Qu'est-ce qu'un trunk, et quand l'étiquette est-elle posée ?", a:"Un lien qui transporte plusieurs VLAN, chaque trame portant l'étiquette de son VLAN. Elle est posée quand la trame sort par un port trunk, et retirée quand elle sort vers un poste.", hl:["SW-FINANCE","DISTRI-GAUCHE","CORE-L3"]},
+ {q:"Pourquoi le DHCP est-il sur le cœur ?", a:"Une demande d'adresse est une diffusion, qui ne franchit pas un VLAN. Le cœur est présent dans chaque VLAN : il reçoit toutes les demandes sans relais.", hl:["CORE-L3"]},
+ {q:"Qui route entre la Finance et la Direction ?", a:"Le switch de cœur, grâce à ses interfaces virtuelles. Aucun routeur n'intervient, et les adresses IP ne changent pas.", hl:["CORE-L3","FINANCE","DIRECTION"]},
+ {q:"Où se fait le NAT, et que fait-il au retour ?", a:"Sur le routeur Rouge. À l'aller, il remplace l'expéditeur par son adresse publique et note la ligne dans sa table. Au retour, il retrouve la ligne grâce au numéro de port et remplace le destinataire.", hl:["Rouge"]},
+ {q:"Pourquoi avoir retiré le NAT statique ?", a:"Il réécrivait l'adresse de la réponse du serveur : le poste recevait une réponse d'une adresse qu'il n'avait pas interrogée, et la rejetait. Or l'objectif était que les postes accèdent au serveur web.", hl:["Vert","SRV-WEB"]},
+ {q:"Vos listes du cœur fonctionnent-elles ?", a:"Non : elles sont écrites mais pas appliquées, et show ip interface le montre. Telles quelles, elles auraient trois défauts : elles bloqueraient les réponses vers l'Informatique, les pings vers les routeurs et les demandes DHCP.", hl:["CORE-L3"]},
+ {q:"Pourquoi la liste 100 est-elle sur le routeur Rouge ?", a:"Les postes du siège n'ont pas besoin de le traverser pour joindre le DNS, ceux des autres bâtiments y sont obligés. Le filtre à son entrée sépare exactement l'intérieur de l'extérieur.", hl:["Rouge","SRV-DNS"]},
+ {q:"Quelle différence entre LACP et la topologie en V ?", a:"LACP regroupe des câbles parallèles vers le même équipement, contre la rupture d'un câble. La topologie en V relie chaque switch d'accès aux deux distributions, contre la panne d'un équipement.", hl:["DISTRI-GAUCHE","DISTRI-DROITE"]},
+ {q:"Pourquoi de l'IPv6, et à quoi sert l'adresse lien-local ?", a:"Le plan d'action précise que l'adresse du site fournie par le fournisseur d'accès est en IPv6. La lien-local sert au dialogue entre voisins sur un même câble ; elle n'est jamais routée.", hl:["Rouge","Bleu","Vert"]},
+ {q:"Quels sont les points faibles de votre architecture ?", a:"Le switch de cœur et le routeur Rouge sont deux points uniques de défaillance. S'ils tombent, les services ne communiquent plus entre eux, ou le siège est coupé des autres bâtiments. En production, je les doublerais.", hl:["CORE-L3","Rouge"]},
+ {q:"D'où viennent vos préconisations ?", a:"Du Guide d'hygiène informatique de l'ANSSI : mesure 21 pour le SSH, mesure 28 pour le réseau d'administration, mesure 26 pour les prises des zones ouvertes au public.", hl:["SW-ACCUEIL","SW-SHOWROOM","SW-REUNION"]}
+];
+
+/* ================= PLAN D'ADRESSAGE COMPLET (verifie dans la maquette) ================= */
+const PLAN = [
+ {d:"Routeur Rouge", rows:[
+   ["Gi0/0/0, vers le cœur","192.168.99.1/30","2001:0:CAFE:F::1/64, FE80::1"],
+   ["Se0/1/0, vers le Bleu","132.186.32.33/30","2001:0:CAFE:A::1/64, FE80::1"],
+   ["Se0/1/1, vers le Vert","132.186.32.42/30","2001:0:CAFE:C::2/64, FE80::1"]]},
+ {d:"Routeur Bleu", rows:[
+   ["Gi0/0/0, accueil","192.168.60.254/24","2001:0:CAFE:60::254/64, FE80::2"],
+   ["Gi0/0/1, showroom","192.168.70.254/24","2001:0:CAFE:70::254/64, FE80::2"],
+   ["Se0/1/0, vers le Rouge","132.186.32.34/30","2001:0:CAFE:A::2/64, FE80::2"],
+   ["Se0/1/1, vers le Vert","132.186.32.37/30","2001:0:CAFE:B::1/64, FE80::2"]]},
+ {d:"Routeur Vert", rows:[
+   ["Gi0/0/0, serveur web","192.168.90.254/24","2001:0:CAFE:90::254/64, FE80::3"],
+   ["Gi0/0/1, réunion","192.168.80.254/24","2001:0:CAFE:80::254/64, FE80::3"],
+   ["Se0/1/0, vers le Bleu","132.186.32.38/30","2001:0:CAFE:B::2/64, FE80::3"],
+   ["Se0/1/1, vers le Rouge","132.186.32.41/30","2001:0:CAFE:C::1/64, FE80::3"]]},
+ {d:"Switch de cœur", rows:[
+   ["Gi1/0/1, port routé vers le Rouge","192.168.99.2/30","2001:0:CAFE:F::2/64"],
+   ["Vlan10, Informatique","192.168.10.1/24","2001:0:CAFE:10::1/64, FE80::1"],
+   ["Vlan20, RH","192.168.20.1/24","2001:0:CAFE:20::1/64, FE80::1"],
+   ["Vlan30, Direction","192.168.30.1/24","2001:0:CAFE:30::1/64, FE80::1"],
+   ["Vlan40, Finance","192.168.40.1/24","2001:0:CAFE:40::1/64, FE80::1"],
+   ["Vlan50, Commerciaux","192.168.50.1/24","2001:0:CAFE:50::1/64, lien-local automatique"],
+   ["Vlan100, Serveurs","192.168.100.1/24","2001:0:CAFE:100::1/64, FE80::1"],
+   ["VLAN 99, MANAGEMENT","déclaré, sans adresse","aucune"]]},
+ {d:"Distributions", rows:[
+   ["DISTRI-GAUCHE, Vlan1 et Vlan10","192.168.1.2 et 192.168.10.2","passerelle 192.168.10.1"],
+   ["DISTRI-DROITE, Vlan1 et Vlan10","192.168.1.3 et 192.168.10.3","passerelle 192.168.10.1"]]},
+ {d:"Serveurs", rows:[
+   ["SRV-DNS","192.168.100.10/24, passerelle .100.1","2001:0:CAFE:100::10/64"],
+   ["SRV-WEB","192.168.90.80/24, passerelle .90.254","2001:0:CAFE:90::80/64"]]},
+ {d:"Postes", rows:[
+   ["Les 5 postes du siège","DHCP, de .11 à .254 de leur VLAN","autoconfiguration"],
+   ["ACCUEIL","192.168.60.253/24, passerelle .60.254","aucune"],
+   ["SHOWROOM","192.168.70.253/24, passerelle .70.254","aucune"],
+   ["REUNION","192.168.80.253/24, passerelle .80.254","aucune"]]}
+];
+const PLAN_NOTE = "Liaisons : 132.186.32.32/30 entre le Rouge et le Bleu, .36/30 entre le Bleu et le Vert, .40/30 entre le Vert et le Rouge. Douze adresses utilisées sur les trente-deux du bloc /27 : il en reste vingt. Lien entre le routeur et le cœur : 192.168.99.0/30.";
+
+/* etiquettes d'adresses posees sur la carte : [equipement de reference, x, y, texte] */
+const ADDR = [["Rouge", 638, 334, ".33"], ["Bleu", 609, 281, ".34"], ["Bleu", 676, 154, ".37"], ["Vert", 789, 150, ".38"], ["Vert", 821, 281, ".41"], ["Rouge", 772, 337, ".42"], ["Bleu", 489, 105, ".60.254"], ["Bleu", 467, 196, ".70.254"], ["Vert", 986, 140, ".90.254"], ["Vert", 965, 252, ".80.254"], ["Rouge", 768, 418, ".99.1"], ["CORE-L3", 752, 470, ".99.2"], ["CORE-L3", 875, 545, "passerelles en .1"], ["DISTRI-GAUCHE", 433, 752, ".10.2"], ["DISTRI-DROITE", 1003, 752, ".10.3"], ["ACCUEIL", 102, 129, ".60.253"], ["SHOWROOM", 90, 341, ".70.253"], ["REUNION", 1442, 392, ".80.253"], ["SRV-WEB", 1432, 122, ".90.80"], ["SRV-DNS", 100, 1158, ".100.10"], ["INFORMATIQUE", 372, 1169, "DHCP"], ["FINANCE", 636, 1174, "DHCP"], ["COMMERCIAL", 922, 1173, "DHCP"], ["RH", 1188, 1183, "DHCP"], ["DIRECTION", 1438, 1181, "DHCP"]];
+
+/* ================= PARTIE « LE JOUR J » ================= */
+const JOUR = { id:"jour", part:"avant", title:"Le jour J", dur:0,
+  req:"La présentation dure quinze minutes, à plus ou moins cinq minutes. En dessous de dix minutes ou au-delà de vingt, elle peut être refusée.",
+  hl:{all:true}, pins:[],
+  checklist:[
+   "Présenter une copie propre de la maquette : sans tes notes de révision, avec les passerelles corrigées.",
+   "Renseigner le DNS 192.168.100.10 sur le PC ACCUEIL, pour la démonstration des ACL.",
+   "Relever avec ipconfig les adresses reçues par les PC INFORMATIQUE, FINANCE, RH et DIRECTION, et les noter sur papier.",
+   "Lancer chaque démonstration une fois, et comparer avec les affichages décrits ici, surtout ceux marqués « à vérifier ».",
+   "Prévoir de lancer chaque ping deux fois : le premier échoue souvent, le temps que les adresses matérielles soient apprises.",
+   "Pour le partage d'écran : agrandir le texte de la console, et fermer tout ce qui ne sert pas.",
+   "Garder ouverts tes documents de configuration et de préconisations, pour les montrer.",
+   "Chronométrer une répétition complète, à voix haute : entre dix et vingt minutes."],
+  traps:[
+   ["Pinguer 8.8.8.8","Il n'y a pas d'Internet dans ta maquette : le ping échouera. Pingue 132.186.32.41 depuis le PC INFORMATIQUE."],
+   ["Taper le préfixe www","Aucun enregistrement ne le porte : la page ne s'affichera pas. Tape impactinfluence.com."],
+   ["Dire que la Finance est bloquée vers le site","Le cahier des charges exige l'inverse, et tes listes du cœur ne sont pas actives."],
+   ["Montrer un blocage entre deux VLAN","Tes listes du cœur ne sont pas appliquées : le ping passera. Dis-le honnêtement."],
+   ["Placer le NAT sur le routeur de l'accueil","Le bâtiment Bleu n'a aucun NAT : il est sur le routeur Rouge, au siège."]],
+  posture:[
+   ["Quand tu ne sais pas","Je ne sais pas, mais voici comment je le vérifierais."],
+   ["Quand le simulateur traîne","Le simulateur a une latence, je relance le test."],
+   ["Quand on te pointe un défaut","Oui, je l'ai identifié en repassant ma maquette, voici ce que j'en ai conclu."]],
+  qa:[] };
+
+/* ================= COMPLEMENTS DES PARTIES EXISTANTES ================= */
+const PATCH = {
+ adr:{ sayFirst:"Impact Influence m'a confié le réseau de ses trois bâtiments : le siège, avec ses cinq services, un bâtiment pour l'accueil et le showroom, et un bâtiment qui héberge le serveur web et une salle de réunion. Je vais justifier mon adressage, démontrer le fonctionnement sur la maquette, puis présenter mes préconisations de sécurité.",
+       show:[{w:"L'ouverture",c:"le contexte en vingt secondes, puis le plan de ta présentation"},
+             {w:"Ton schéma",c:"les trois bâtiments, le triangle des liaisons série, les trois niveaux du siège"},
+             {w:"Ton plan d'adressage complet",c:"le tableau ci-dessous, ou les adresses affichées sur la carte"}],
+       livrable:"Ton document de configuration contient trois défauts : un plan d'adressage incomplet en page 1, la page 4 titrée « Routeur Batiment rouge » alors qu'elle montre le routeur Vert, et une ancienne configuration du routeur Rouge en page 5, sans le NAT ni la liste 100. Si tu ne peux plus le redéposer, dis-le dès l'ouverture : « Mon document a été figé avant mes derniers ajustements, la maquette fait foi. »",
+       plan:true },
+ routes:{ verify:"les lettres O E2 devant les réseaux du siège, dans la table du routeur Vert." },
+ vlan:{ showAdd:{w:"Sur le PC RH, Command Prompt",c:"ping vers l'adresse du PC DIRECTION, relevée avant"},
+        seeAdd:" Et le ping du poste RH vers le poste Direction répond : le routage entre les VLAN fonctionne.",
+        verify:"le nom MANAGEMENT à côté du VLAN 99." },
+ internet:{ verify:"le format exact de la table des traductions." },
+ acl:{ verify:"l'augmentation du compteur de la ligne deny de la liste 100." },
+ preco:{ showFirst:{w:"Ton document de préconisations",c:"à l'écran, pendant que tu présentes les trois mesures"} }
+};
+
+const QUIZ_ADD = [
+ {q:"À quoi sert votre plage DHCP POOL-GENERAL ?", a:"À rien : c'est un reste de mes premiers essais. Chaque VLAN a sa propre plage, et mes postes reçoivent bien la passerelle de leur VLAN. Je la supprimerais.", hl:["CORE-L3"]},
+ {q:"Comment la charge se répartit-elle entre vos quatre câbles agrégés ?", a:"Par conversation : chaque flux emprunte un câble choisi par un calcul sur les adresses. Avec peu de flux, comme dans une démonstration, un seul câble peut tout porter.", hl:["DISTRI-GAUCHE","DISTRI-DROITE"]},
+ {q:"Votre serveur web est-il accessible en IPv6 depuis l'extérieur ?", a:"Pas depuis mes postes satellites, qui n'ont pas d'adresse IPv6. En activant l'autoconfiguration IPv6 sur le PC ACCUEIL, le routeur Bleu lui en fournirait une, et OSPFv3 connaît déjà le chemin jusqu'au serveur.", hl:["ACCUEIL","Bleu","Vert","SRV-WEB"]},
+ {q:"Quelle a été votre méthode de travail ?", a:"J'ai suivi le plan d'action étape par étape, et je vérifiais chaque étape par une commande d'affichage et un test avant de passer à la suivante. C'est ainsi que j'ai trouvé les marquages du NAT manquants, les listes non appliquées sur le cœur, et les passerelles inversées de deux postes.", hl:["Rouge","CORE-L3","ACCUEIL","SHOWROOM"]},
+ {q:"À quoi servent les interfaces VLAN de vos distributions ?", a:"À les administrer à distance. Chacune porte une adresse d'administration dans le VLAN 10, avec une passerelle par défaut vers le cœur. C'est justement ce que ma deuxième préconisation propose de déplacer dans un VLAN dédié.", hl:["DISTRI-GAUCHE","DISTRI-DROITE","CORE-L3"]},
+ {q:"Comment ajouteriez-vous un nouveau service ?", a:"Je créerais un VLAN, déclaré sur le cœur, les deux distributions et le nouveau switch d'accès, avec un réseau en /24, une interface virtuelle en .1 sur le cœur et un pool DHCP. J'ajouterais une route statique sur le routeur Rouge, en IPv4 et en IPv6, et j'adapterais les listes de filtrage. Les trunks transporteraient le nouveau VLAN sans modification.", hl:["CORE-L3","DISTRI-GAUCHE","DISTRI-DROITE","Rouge"]}
+];
+
+/* ================= AJOUTS : application des complements ================= */
+SOUT.unshift(JOUR);
+SOUT.forEach(c=>{ const p=PATCH[c.id]; if(!p) return;
+  if(p.sayFirst) c.say=[p.sayFirst,...c.say];
+  if(p.show) c.show=p.show;
+  if(p.showAdd) c.show=[...c.show,p.showAdd];
+  if(p.showFirst) c.show=[p.showFirst,...c.show];
+  if(p.seeAdd) c.see=c.see+p.seeAdd;
+  if(p.verify) c.verify=p.verify;
+  if(p.livrable) c.livrable=p.livrable;
+  if(p.plan) c.plan=true;
+});
+QUIZ.push(...QUIZ_ADD);
+
+/* ================= MODE SOUTENANCE ================= */
+let mode='trajets', card=1;
+const qaOpen={};
+let qstate={}, qorder=[...QUIZ.keys()], qpos=0;
+try{ const v=JSON.parse(localStorage.getItem('trajet-v4')||'{}');
+  if(v.mode==='sout'||v.mode==='trajets'||v.mode==='loupe') mode=v.mode;
+  if(v.card>=1&&v.card<=SOUT.length) card=v.card;
+  if(v.qstate) qstate=v.qstate;
+  if(Array.isArray(v.qorder)&&v.qorder.length) qorder=v.qorder.filter(i=>i<QUIZ.length);
+  if(typeof v.qpos==='number') qpos=v.qpos; }catch(e){}
+const saveSout=()=>{ try{localStorage.setItem('trajet-v4',JSON.stringify({mode,card,qstate,qorder,qpos}));}catch(e){} };
+
+const linkKind={}; TOPO.links.forEach(l=>linkKind[linkKey(l.a,l.b)]=l.k);
+const fmt=s=>{const m=Math.floor(s/60), r=s%60; return r?`${m} min ${r}`:`${m} min`;};
+
+document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.mode; buildCurrentRail(); render(); }));
+
+function buildSoutRail(){
+  const rail=document.getElementById('rail'); rail.innerHTML='';
+  const numbered=SOUT.filter(x=>x.part!=='avant');
+  [["avant","Avant"],["presentation","Présentation, 15 min"],["discussion","Discussion"]].forEach(([p,lab])=>{
+    const w=document.createElement('div'); w.className='leg';
+    const l=document.createElement('span'); l.className='leg-name'; l.textContent=lab; w.appendChild(l);
+    SOUT.forEach((c,i)=>{ if(c.part!==p) return; const b=document.createElement('button'); b.className='dot';
+      const lbl=c.part==='avant'?'J':String(numbered.indexOf(c)+1);
+      b.dataset.card=i+1; b.textContent=lbl; b.setAttribute('aria-label',`Partie ${lbl}, ${c.title}`);
+      b.addEventListener('click',()=>{card=i+1;render();}); w.appendChild(b); });
+    rail.appendChild(w);
+  });
+}
+
+function pin(x,y,text,tx,ty){
+  const vb=svg.viewBox.baseVal;
+  const g=el('g',{class:'pin'},gCap);
+  if(tx!==undefined) el('line',{x1:x,y1:y,x2:tx,y2:ty,class:'lead'},g);
+  const t=el('text',{x:0,y:0,'text-anchor':'middle'},g); t.textContent=text;
+  const w=t.getComputedTextLength()+30, hh=20;
+  x=Math.max(vb.x+w/2+8,Math.min(vb.x+vb.width-w/2-8,x));
+  t.setAttribute('x',x); t.setAttribute('y',y+8);
+  const r=el('rect',{x:x-w/2,y:y-hh,width:w,height:hh*2,rx:8},g); g.insertBefore(r,t);
+}
+
+function renderSout(){
+  const c=SOUT[card-1];
+  let on;
+  if(c.id==='quiz'){ const q=QUIZ[qorder[qpos]]; on=new Set(q?q.hl:Object.keys(devEls)); }
+  else on=new Set(c.hl.all?Object.keys(devEls):c.hl.devs);
+  const pairs=new Set((c.hl.pairs||[]).map(p=>linkKey(p[0],p[1])));
+  Object.entries(devEls).forEach(([n,o])=>{ o.g.classList.toggle('off',!on.has(n)); o.halo.classList.remove('on','bad'); });
+  Object.entries(linkEls).forEach(([k,ls])=>{
+    const [a,b]=k.split('|');
+    let lit = c.hl.all && c.id!=='quiz' ? true
+      : c.id==='quiz' ? (on.has(a)&&on.has(b))
+      : pairs.size ? pairs.has(k)
+      : (c.hl.kinds||[]).includes(linkKind[k]) && on.has(a) && on.has(b);
+    ls.forEach(l=>l.classList.toggle('off',!lit));
+  });
+  gFlow.innerHTML=''; gCap.innerHTML='';
+  (addrOn && c.id==='adr' ? [] : (c.pins||[])).forEach(p=>{
+    let tx,ty;
+    if(p.dev){ tx=pos[p.dev].x; ty=pos[p.dev].y; devEls[p.dev].halo.classList.add('on'); }
+    else if(p.link){ tx=(pos[p.link[0]].x+pos[p.link[1]].x)/2; ty=(pos[p.link[0]].y+pos[p.link[1]].y)/2; }
+    pin(p.x,p.y,p.t,tx,ty);
+  });
+  { const box=document.querySelector('.map');
+    if(box.scrollWidth>box.clientWidth){
+      const xsC=(c.pins&&c.pins.length)?c.pins.map(p=>p.x):[...on].map(n=>pos[n].x);
+      const cx=xsC.reduce((a,b)=>a+b,0)/xsC.length, vb=svg.viewBox.baseVal, pxl=(cx-vb.x)/vb.width*svg.clientWidth;
+      const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      box.scrollTo({left:Math.max(0,pxl-box.clientWidth/2),behavior:reduce?'auto':'smooth'}); } }
+  // rail
+  document.querySelectorAll('#rail .dot').forEach(b=>{ const n=+b.dataset.card;
+    b.removeAttribute('aria-current'); if(n===card) b.setAttribute('aria-current','step'); b.classList.toggle('done',n<card); });
+  const pv=document.getElementById('prev'), nx=document.getElementById('next');
+  pv.disabled = card===1; pv.textContent='Partie précédente';
+  nx.disabled = card===SOUT.length;
+  nx.textContent = SOUT[card] && SOUT[card].part!==c.part ? (SOUT[card].part==='presentation'?'Commencer la présentation':'Passer à la discussion') : 'Partie suivante';
+  document.getElementById('side').innerHTML = c.id==='quiz' ? quizHTML() : c.id==='jour' ? jourHTML(c) : soutHTML(c);
+  bindSout(c); bindX(c);
+  saveSout(); setTop();
+}
+
+function soutHTML(c){
+  const pres=SOUT.filter(s=>s.part==='presentation');
+  let head;
+  if(c.part==='presentation'){
+    const i=pres.indexOf(c), start=pres.slice(0,i).reduce((a,s)=>a+s.dur,0);
+    head=`<p class="eyebrow">Présentation, partie ${i+1} sur ${pres.length}</p><h2>${c.title}</h2>
+      <p class="clock">De ${fmt(start)} à ${fmt(start+c.dur)}, soit ${fmt(c.dur)}</p>`;
+  } else head=`<p class="eyebrow">Discussion, dix minutes</p><h2>${c.title}</h2>`;
+  const req=`<div class="req"><span>Ce que demande le cahier des charges</span>${c.req}</div>`;
+  const pre=c.pre?`<p class="pre"><b>Avant la soutenance.</b> ${c.pre}</p>`:'';
+  const show=c.show&&c.show.length?`<h3 class="sub">Ce que tu montres</h3><ol class="acts">${c.show.map(s=>`<li><span class="w">${s.w}</span><code>${s.c}</code></li>`).join('')}</ol>`:'';
+  const see=c.see?`<h3 class="sub">Ce que le jury doit voir</h3><p class="say">${c.see}</p>`:'';
+  const ver=c.verify?`<p class="verify"><b>À vérifier une fois avant la soutenance :</b> ${c.verify} Je l'ai décrit d'après le comportement standard de Cisco, sans l'avoir vu sur ton écran.</p>`:'';
+  const liv=c.livrable?`<p class="pre"><b>Ton livrable 1.</b> ${c.livrable}</p>`:'';
+  const pl=c.plan?planHTML():'';
+  const say=c.say&&c.say.length?`<h3 class="sub">La phrase à dire</h3>${c.say.map(t=>`<p class="jury">${t}</p>`).join('')}`:'';
+  const fix=c.fix?`<h3 class="sub">À corriger à l'oral dans ton document</h3><ul class="fix">${c.fix.map(t=>`<li>${t}</li>`).join('')}</ul>`:'';
+  const ecarts=c.ecarts?c.ecarts.map(([a,b,d])=>`<div class="ecart"><p><span>Le cahier des charges demandait</span>${a}</p><p><span>Ce que tu as fait</span>${b}</p><p><span>Ta justification</span>${d}</p></div>`).join(''):'';
+  const qa=c.qa&&c.qa.length?`<h3 class="sub">Les questions qui peuvent suivre</h3>${c.qa.map(([q,a],i)=>{
+      const open=qaOpen[`${c.id}:${i}`];
+      return `<div class="qa"><p class="qq">${q}</p>${open?`<p class="qa-a">${a}</p>`:`<button class="btn small" data-qa="${i}">Réponds d'abord, puis révèle</button>`}</div>`;}).join('')}`:'';
+  const tr=(c.trajets||c.loupe!=null)?`<div class="goto">${(c.trajets||[]).map(id=>{const s=SCEN.find(x=>x.id===id);return `<button class="btn small" data-trajet="${id}">Revoir le trajet : ${s.name}</button>`;}).join('')}${c.loupe!=null?`<button class="btn small" data-loupe="${c.loupe}">Voir la trame à la loupe</button>`:''}</div>`:'';
+  return head+req+pre+liv+show+pl+see+ver+say+fix+ecarts+qa+tr;
+}
+
+function quizHTML(){
+  const ok=Object.values(qstate).filter(v=>v==='ok').length, rv=Object.values(qstate).filter(v=>v==='review').length;
+  const top=`<p class="eyebrow">Discussion, dix minutes</p><h2>Les questions du jury</h2>`;
+  if(qpos>=qorder.length){
+    return top+`<p class="say">Série terminée. Tu savais <b>${ok}</b> réponses sur ${QUIZ.length}, et <b>${rv}</b> sont à revoir.</p>
+      <div class="goto">${rv?`<button class="btn primary small" id="qreview">Revoir seulement les ${rv} questions à revoir</button>`:''}
+      <button class="btn small" id="qall">Tout recommencer</button></div>`;
+  }
+  const i=qorder[qpos], q=QUIZ[i], open=qaOpen['quiz:'+i];
+  return top+`<p class="clock">Question ${qpos+1} sur ${qorder.length}. Je savais : ${ok}. À revoir : ${rv}.</p>
+    <div class="flash"><p class="qq big">${q.q}</p>
+    ${open?`<p class="qa-a">${q.a}</p><div class="rate"><button class="btn" id="qrv">À revoir</button><button class="btn primary" id="qok">Je savais</button></div>`
+          :`<p class="hint2">Réponds à voix haute, comme devant le jury. Puis révèle la réponse.</p><button class="btn primary" id="qshow">Voir la réponse</button>`}
+    </div><p class="kbd">Les équipements concernés par la question sont mis en évidence sur la carte.</p>`;
+}
+
+function bindSout(c){
+  document.querySelectorAll('[data-qa]').forEach(b=>b.addEventListener('click',()=>{qaOpen[`${c.id}:${b.dataset.qa}`]=true;render();}));
+  document.querySelectorAll('[data-trajet]').forEach(b=>b.addEventListener('click',()=>{
+    mode='trajets'; si=SCEN.findIndex(x=>x.id===b.dataset.trajet); step=0; buildRail(); render();}));
+  const g=id=>document.getElementById(id);
+  if(g('qshow')) g('qshow').addEventListener('click',()=>{qaOpen['quiz:'+qorder[qpos]]=true;render();});
+  const rate=v=>{ qstate[qorder[qpos]]=v; delete qaOpen['quiz:'+qorder[qpos]]; qpos++; render(); };
+  if(g('qok')) g('qok').addEventListener('click',()=>rate('ok'));
+  if(g('qrv')) g('qrv').addEventListener('click',()=>rate('review'));
+  if(g('qreview')) g('qreview').addEventListener('click',()=>{ qorder=Object.keys(qstate).filter(k=>qstate[k]==='review').map(Number); qorder.forEach(i=>delete qstate[i]); qpos=0; render(); });
+  if(g('qall')) g('qall').addEventListener('click',()=>{ qstate={}; qorder=[...QUIZ.keys()]; qpos=0; render(); });
+}
+
+/* ================= AJOUTS : rendu ================= */
+let jstate={}, planOpen=false, addrOn=false;
+try{ const v=JSON.parse(localStorage.getItem('trajet-v4x')||'{}'); if(v.jstate) jstate=v.jstate; addrOn=!!v.addrOn; }catch(e){}
+const saveX=()=>{ try{localStorage.setItem('trajet-v4x',JSON.stringify({jstate,addrOn}));}catch(e){} };
+
+/* --- calque des adresses --- */
+const gAddr=el('g',{class:'addr'});
+svg.insertBefore(gAddr, gCap);   /* les adresses passent sous les reperes et les fleches */
+function drawAddr(){
+  gAddr.innerHTML='';
+  document.getElementById('addrBtn').setAttribute('aria-pressed',addrOn?'true':'false');
+  if(!addrOn) return;
+  ADDR.forEach(([dev,x,y,t])=>{
+    const g=el('g',{},gAddr);
+    const tx=el('text',{x,y:y+7,'text-anchor':'middle'},g); tx.textContent=t;
+    const w=tx.getComputedTextLength()+16;
+    const r=el('rect',{x:x-w/2,y:y-15,width:w,height:30,rx:6},g); g.insertBefore(r,tx);
+  });
+}
+document.getElementById('addrBtn').addEventListener('click',()=>{ addrOn=!addrOn; saveX(); drawAddr(); });
+
+/* --- chronometre de repetition --- */
+let chT0=null, chAcc=0, chInt=null;
+const chEl=()=>chAcc+(chT0?(Date.now()-chT0)/1000:0);
+function chUpdate(){
+  const e=Math.floor(chEl()), mm=String(Math.floor(e/60)).padStart(2,'0'), ss=String(e%60).padStart(2,'0');
+  document.getElementById('chT').textContent=`${mm}:${ss}`;
+  const pres=SOUT.filter(s=>s.part==='presentation'); let acc=0, cur=pres.length;
+  for(let i=0;i<pres.length;i++){ if(e<acc+pres[i].dur){cur=i+1;break;} acc+=pres[i].dur; }
+  const h=document.getElementById('chH'); h.className='h';
+  if(e>=1200){ h.textContent='Au-delà de 20 minutes : la présentation peut être refusée.'; h.className='h warn'; }
+  else if(e>=900) h.textContent='Au-delà de tes 15 minutes prévues : il te reste jusqu\'à 20 minutes au maximum.';
+  else if(e===0) h.textContent='Lance-le au début d\'une répétition complète, à voix haute.';
+  else h.textContent=`Selon ton minutage, tu devrais être à la partie ${cur} : ${pres[cur-1].title}.`;
+  if(!chT0 && e>0 && e<600){ h.textContent='En pause avant 10 minutes : trop court si tu t\'arrêtes là.'; h.className='h warn'; }
+}
+document.getElementById('chGo').addEventListener('click',()=>{
+  const b=document.getElementById('chGo');
+  if(chT0){ chAcc=chEl(); chT0=null; clearInterval(chInt); b.textContent='Reprendre'; }
+  else { chT0=Date.now(); chInt=setInterval(chUpdate,500); b.textContent='Pause'; }
+  chUpdate();
+});
+document.getElementById('chRz').addEventListener('click',()=>{
+  chAcc=0; chT0=null; clearInterval(chInt); document.getElementById('chGo').textContent='Démarrer le chronomètre'; chUpdate(); });
+chUpdate();
+
+/* --- contenu supplementaire des parties --- */
+function jourHTML(c){
+  const n=c.checklist.length, done=c.checklist.filter((_,i)=>jstate[i]).length;
+  return `<p class="eyebrow">Avant la soutenance</p><h2>${c.title}</h2>
+   <div class="req"><span>Ce que demande le cahier des charges</span>${c.req}</div>
+   <h3 class="sub">Ta liste de vérification, ${done} sur ${n}</h3>
+   <ul class="check">${c.checklist.map((t,i)=>`<li><label><input type="checkbox" data-j="${i}" ${jstate[i]?'checked':''}> <span>${t}</span></label></li>`).join('')}</ul>
+   <h3 class="sub">À ne jamais faire en direct</h3>
+   ${c.traps.map(([t,w])=>`<div class="trap"><b>${t}.</b> ${w}</div>`).join('')}
+   <h3 class="sub">Les phrases qui te sauvent</h3>
+   ${c.posture.map(([k,t])=>`<p class="say"><span class="w2">${k}</span><span class="quote">« ${t} »</span></p>`).join('')}`;
+}
+function planHTML(){
+  if(!planOpen) return `<div class="goto"><button class="btn primary small" id="planBtn">Voir le plan d'adressage complet</button></div>`;
+  const rows=PLAN.map(g=>`<tr class="grp"><td colspan="3">${g.d}</td></tr>`+g.rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')).join('');
+  return `<h3 class="sub">Le plan d'adressage complet</h3>
+    <div class="planwrap"><table class="plan"><thead><tr><th>Interface</th><th>IPv4</th><th>IPv6</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="note">${PLAN_NOTE}</p>
+    <div class="goto"><button class="btn small" id="planBtn">Replier le plan</button></div>`;
+}
+function bindX(c){
+  document.querySelectorAll('[data-j]').forEach(b=>b.addEventListener('change',()=>{ jstate[b.dataset.j]=b.checked; saveX(); render(); }));
+  const pb=document.getElementById('planBtn');
+  if(pb) pb.addEventListener('click',()=>{ planOpen=!planOpen; if(planOpen && !addrOn){ addrOn=true; saveX(); } render(); });
+}
+
+/* ================= LA TRAME A LA LOUPE ================= */
+const AR=" → ";
+const M_PC_CORE="00E0.B0DD.9C65"+AR+"0001.6346.6004";
+const IP_DNS="192.168.40.11:1024"+AR+"192.168.100.10:53";
+const IP_WEB="192.168.40.11:1025"+AR+"192.168.90.80:80";
+const IP_NAT="132.186.32.33:1025"+AR+"192.168.90.80:80";
+const IP_REP="192.168.90.80:80"+AR+"132.186.32.33:1025";
+const IP_BACK="192.168.90.80:80"+AR+"192.168.40.11:1025";
+const SERIE="aucune (liaison série)";
+const LOUPE = [
+ { tab:"1. Résolution du nom", name:"La résolution du nom",
+   lead:"Le poste Finance veut ouvrir impactinfluence.com. Il doit d'abord demander l'adresse du site au serveur DNS, 192.168.100.10. Tout se passe dans le siège.",
+   note:"L'adresse 192.168.40.11 du poste est probable, puisqu'il la reçoit par DHCP. Le port 1024 est un exemple.",
+   end:"Le serveur répond : impactinfluence.com, c'est 192.168.90.80. La réponse refait le chemin à l'envers, avec l'étiquette 100, puis 40. Les adresses IP n'ont jamais changé.",
+   nodes:[["Poste FINANCE","Fa0",0],["SW-FINANCE","Fa0/1 vers Gi0/1",0],["DISTRI-GAUCHE","Gi1/0/8 vers Gi1/0/1",0],["Cœur (CORE-L3)","Vlan40 vers Vlan100",1],["DISTRI-GAUCHE","Gi1/0/1 vers Gi1/0/6",0],["SW-DNS","Gi0/1 vers Fa0/1",0],["SRV-DNS","Service DNS, port 53",0]],
+   zones:[[0,6,"Siège, bâtiment Rouge"]], wan:null,
+   links:[
+    {created:1, mac:M_PC_CORE, ip:IP_DNS, tag:"aucune", chg:[],
+     say:"Le poste fabrique sa requête. Le serveur DNS n'est pas dans son réseau : il adresse la trame à sa passerelle, le cœur. Au premier envoi, il obtient l'adresse matérielle du cœur par ARP.",
+     why:{mac:"destination matérielle, la passerelle, car le serveur n'est pas dans son réseau.", ip:"destination IP, le serveur DNS lui-même, sur le port 53.", tag:"aucune, car un poste ignore tout des VLAN."}},
+    {mac:M_PC_CORE, ip:IP_DNS, tag:"VLAN 40", chg:["tag"],
+     say:"Le switch ne lit que l'adresse matérielle : elle se trouve derrière son lien montant, Gi0/1.",
+     why:{tag:"le port du poste est en access dans le VLAN 40. En sortant par le trunk, le switch étiquette la trame."}},
+    {mac:M_PC_CORE, ip:IP_DNS, tag:"VLAN 40", chg:[],
+     say:"La distribution lit l'étiquette et l'adresse matérielle, puis transmet vers le cœur sans rien modifier.", why:{}},
+    {mac:"0001.6346.6006"+AR+"0060.3ED0.B3A2", ip:IP_DNS, tag:"VLAN 100", chg:["mac","tag"], badge:"Complément",
+     badgeText:"Tu n'avais pas noté ce changement d'étiquette : 40 à l'arrivée au cœur, 100 au départ.",
+     say:"Le cœur retire l'étiquette 40 et lit l'IP. Le réseau 192.168.100.0 est branché sur son interface Vlan100 : il route.",
+     why:{mac:"le cœur a routé. Il fabrique une nouvelle trame, de son interface Vlan100 vers le serveur DNS.", tag:"le serveur est dans le VLAN 100 : la trame repart étiquetée 100."}},
+    {mac:"0001.6346.6006"+AR+"0060.3ED0.B3A2", ip:IP_DNS, tag:"VLAN 100", chg:[],
+     say:"La distribution transmet vers SW-DNS, sans rien modifier.", why:{}},
+    {mac:"0001.6346.6006"+AR+"0060.3ED0.B3A2", ip:IP_DNS, tag:"aucune", chg:["tag"],
+     say:"Le switch remet la trame au serveur DNS.", why:{tag:"le port du serveur est en access : le switch retire l'étiquette."}}
+   ]},
+ { tab:"2. Requête web", name:"La requête web, à l'aller", trajet:"web",
+   lead:"Le navigateur connaît maintenant l'adresse du site, 192.168.90.80. Il envoie sa requête au service web, sur le port 80. Cette fois, la trame quitte le siège.",
+   note:"Le port 1025 est un exemple, choisi par le navigateur.",
+   end:"Le serveur voit l'expéditeur 132.186.32.33 : il ignore l'existence du poste. Passe à la phase 3 pour suivre sa réponse.",
+   nodes:[["Poste, SW, DISTRI","Comme pour le DNS",0],["Cœur (CORE-L3)","Route par défaut",1],["Routeur Rouge","Route OSPF, puis NAT",1],["Routeur Vert","Se0/1/1 vers Gi0/0/0",1],["SW-WEB","Gi0/1 vers Fa0/1",0],["SRV-WEB","Service web, port 80",0]],
+   zones:[[0,2,"Siège, bâtiment Rouge"],[3,5,"Bâtiment Vert"]], wan:2,
+   links:[
+    {created:1, mac:M_PC_CORE, ip:IP_WEB, tag:"VLAN 40", chg:[],
+     say:"Même début que pour le DNS : le poste envoie à sa passerelle, et SW-FINANCE étiquette la trame. Elle arrive au cœur avec l'étiquette 40.",
+     why:{ip:"destination IP, le serveur web, que le DNS vient de fournir, sur le port 80.", mac:"destination matérielle, toujours la passerelle.", tag:"posée par SW-FINANCE, conservée par la distribution."}},
+    {mac:"0002.1747.6A01"+AR+"0001.977A.8E01", ip:IP_WEB, tag:"aucune", chg:["mac","tag"], badge:"Correction 3",
+     badgeText:"Tu pensais que l'étiquette était retirée pour la liaison série. Elle disparaît ici, au cœur, parce que Gi1/0/1 est un port routé.",
+     say:"Le cœur ne connaît pas le réseau 192.168.90.0 : il applique sa route par défaut, vers le routeur Rouge, 192.168.99.1.",
+     why:{mac:"le cœur a routé : nouvelle trame, de son port Gi1/0/1 vers le routeur Rouge.", tag:"Gi1/0/1 est un port routé, pas un trunk. C'est ici que l'étiquette disparaît."}},
+    {serial:1, mac:SERIE, ip:IP_NAT, tag:"aucune", chg:["mac","ip"], badge:"Correction 1", nat:"write",
+     badgeText:"Tu pensais que le cœur faisait le NAT. C'est le routeur Rouge qui traduit, après avoir choisi sa route OSPF.",
+     say:"Le routeur Rouge choisit d'abord sa route OSPF vers le Vert, par Se0/1/1. Puis il traduit : le paquet passe d'une interface inside à une interface outside.",
+     why:{mac:"une liaison série ne transporte pas de trame Ethernet : plus d'adresse matérielle.", ip:"le NAT remplace l'expéditeur privé par l'adresse publique, et note la correspondance dans sa table."}},
+    {mac:"0010.116E.5701"+AR+"0010.1110.EAB0", ip:IP_NAT, tag:"aucune", chg:["mac"],
+     say:"Le réseau 192.168.90.0 est branché directement sur le Gi0/0/0 du routeur Vert.",
+     why:{mac:"le Vert a routé : nouvelle trame Ethernet, vers le serveur branché sur son réseau."}},
+    {mac:"0010.116E.5701"+AR+"0010.1110.EAB0", ip:IP_NAT, tag:"aucune", chg:[],
+     say:"Le switch remet la trame au serveur web, sans rien modifier.", why:{}}
+   ]},
+ { tab:"3. Réponse", name:"La réponse, au retour", trajet:"web",
+   lead:"Le serveur répond à l'expéditeur qu'il a vu, 132.186.32.33. Suis comment la réponse retrouve le poste Finance, grâce à la ligne que le routeur Rouge a notée à l'aller.",
+   note:"La table NAT du routeur Rouge, plus bas, contient toujours la ligne écrite pendant la phase 2.",
+   end:"Le poste reconnaît sa conversation : expéditeur 192.168.90.80 sur le port 80, destinataire sa propre adresse sur le port 1025. La page s'affiche.",
+   nodes:[["SRV-WEB","Répond à 132.186.32.33",0],["SW-WEB","Fa0/1 vers Gi0/1",0],["Routeur Vert","Direct, ou par le Bleu",1],["Routeur Rouge","Liste 100, NAT, route",1],["Cœur (CORE-L3)","Vlan40 branché",1],["DISTRI, SW-FINANCE","Garde, puis retire 40",0],["Poste FINANCE","Reconnaît sa conversation",0]],
+   zones:[[0,2,"Bâtiment Vert"],[3,6,"Siège, bâtiment Rouge"]], wan:2,
+   links:[
+    {created:1, mac:"0010.1110.EAB0"+AR+"0010.116E.5701", ip:IP_REP, tag:"aucune", chg:[],
+     say:"Le serveur répond. Le destinataire n'est pas dans son réseau : il envoie à sa passerelle, le routeur Vert.",
+     why:{ip:"destination IP, l'expéditeur qu'il a vu : l'adresse publique du routeur Rouge.", mac:"destination matérielle, sa passerelle, le routeur Vert.", tag:"aucune, le bâtiment Vert n'a pas de VLAN configuré."}},
+    {mac:"0010.1110.EAB0"+AR+"0010.116E.5701", ip:IP_REP, tag:"aucune", chg:[],
+     say:"Le switch remet la trame au routeur Vert, sans rien modifier.", why:{}},
+    {serial:1, mac:SERIE, ip:IP_REP, tag:"aucune", chg:["mac"],
+     say:"132.186.32.33 appartient à la liaison Rouge-Bleu. Deux chemins ont le même coût, direct ou par le Bleu : les deux arrivent au Rouge par une liaison série.",
+     why:{mac:"liaison série : plus d'adresse matérielle."}},
+    {mac:"0001.977A.8E01"+AR+"0002.1747.6A01", ip:IP_BACK, tag:"aucune", chg:["mac","ip"], badge:"Correction 2", nat:"read",
+     badgeText:"Tu avais oublié cette étape : le NAT inverse, entre la liste 100 et la route statique.",
+     say:"Dans l'ordre : la liste 100 autorise le paquet, le NAT inverse traduit le destinataire, puis la route statique l'envoie au cœur, 192.168.99.2.",
+     why:{ip:"le NAT retrouve la ligne de l'aller grâce au port 1025, et rend au poste son adresse.", mac:"le Rouge a routé : nouvelle trame Ethernet, vers le cœur."}},
+    {mac:"0001.6346.6004"+AR+"00E0.B0DD.9C65", ip:IP_BACK, tag:"VLAN 40", chg:["mac","tag"],
+     say:"Le réseau 192.168.40.0 est branché sur l'interface Vlan40 du cœur.",
+     why:{mac:"le cœur a routé : nouvelle trame, de son interface Vlan40 vers le poste.", tag:"le poste est dans le VLAN 40 : la trame part étiquetée sur le trunk."}},
+    {mac:"0001.6346.6004"+AR+"00E0.B0DD.9C65", ip:IP_BACK, tag:"aucune", chg:["tag"],
+     say:"La distribution transmet, puis SW-FINANCE remet la trame au poste.",
+     why:{tag:"le port du poste est en access : le switch retire l'étiquette."}}
+   ]}
+];
+const FL={mac:"Adresses matérielles",ip:"Adresses IP",tag:"Étiquette"};
+let lphase=0, lstep=0, layer='all', lguess=false;
+const lanswers={};
+try{ const v=JSON.parse(localStorage.getItem('trajet-v5l')||'{}');
+  if(v.lphase>=0&&v.lphase<3) lphase=v.lphase;
+  if(v.lstep>=0&&v.lstep<=LOUPE[lphase].links.length) lstep=v.lstep;
+  if(['all','tag','ip','mac'].includes(v.layer)) layer=v.layer; lguess=!!v.lguess; }catch(e){}
+const saveL=()=>{ try{localStorage.setItem('trajet-v5l',JSON.stringify({lphase,lstep,layer,lguess}));}catch(e){} };
+const LP=()=>LOUPE[lphase];
+const loupeSvg=document.getElementById('loupe');
+function lel(t,a,p){ const e=document.createElementNS("http://www.w3.org/2000/svg",t); for(const k in a) e.setAttribute(k,a[k]); (p||loupeSvg).appendChild(e); return e; }
+function ltx(x,y,s,a,p){ const t=lel('text',Object.assign({x,y},a||{}),p); t.textContent=s; return t; }
+function wrapTxt(s,n){ const out=[]; let cur=''; s.split(' ').forEach(w=>{ if(((cur?cur+' ':'')+w).length>n && cur){ out.push(cur); cur=w; } else cur=cur?cur+' '+w:w; }); if(cur) out.push(cur); return out; }
+const needGuess=L=>!L.created;
+const isOpen=k=>{ const L=LP().links[k-1]; return k<lstep || (k===lstep && !(lguess && needGuess(L) && !lanswers[lphase+':'+k])); };
+function whyList(L){ return ['mac','ip','tag'].filter(k=>L.why[k] && (layer==='all'||layer===k)).map(k=>[k,L.why[k]]); }
+
+function renderLoupeSvg(){
+  const P=LP(); loupeSvg.innerHTML='';
+  const C=document.querySelector('.map').clientWidth<600;
+  const W=C?380:760, NH=C?50:56, XN=C?40:170, WN=C?300:210, XA=C?56:275, XC=C?72:400, WC=C?300:350;
+  const XL=C?82:XC+20, XV=C?118:XC+62, WRAP=C?44:50, ZH=C?24:0;
+  const nodeY=[], linkY=[], linkH=[], cardH=[], linkPad=[];
+  const zoneStart=new Set(P.zones.map(z=>z[0]));
+  let y=C?6:14;
+  P.nodes.forEach((n,i)=>{
+    if(C && zoneStart.has(i)) y+=ZH;
+    nodeY[i]=y; y+=NH;
+    if(i<P.links.length){
+      const k=i+1, L=P.links[i];
+      let h=60 + (C && L.badge && k<=lstep && isOpen(k) ? 18 : 0);
+      if(k===lstep && isOpen(k)){ const lines=whyList(L).reduce((a,[f,t])=>a+wrapTxt(FL[f]+" : "+t,WRAP).length,0); if(lines) h+=10+lines*15; }
+      linkPad[i]=(C && P.wan===i)?22:0;
+      cardH[i]=h; linkY[i]=y; linkH[i]=Math.max(C?70:76,h+16)+linkPad[i]; y+=linkH[i];
+    }
+  });
+  const H=y+14;
+  loupeSvg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  P.zones.forEach(([a,b,label])=>{
+    const top=nodeY[a]-8-ZH, bot=nodeY[b]+NH+8;
+    lel('rect',{x:4,y:top,width:W-8,height:bot-top,rx:12,class:'lz '+(label.startsWith('Siège')?'zr':'zv')});
+    if(C) ltx(14,top+17,label,{class:'lzl'});
+    else label.split(', ').forEach((t,j,arr)=>ltx(18,top+18+16*j,t+(j<arr.length-1?',':''),{class:'lzl'}));
+  });
+  if(P.wan!=null){ const i=P.wan, top=linkY[i]+(C?4:10), h=linkH[i]-(C?8:20);
+    lel('rect',{x:4,y:top,width:W-8,height:h,rx:10,class:'lz zw'});
+    if(C) ltx(14,top+16,"Entre les bâtiments",{class:'lzl'});
+    else { ltx(18,top+h/2-4,"Entre les",{class:'lzl'}); ltx(18,top+h/2+12,"bâtiments",{class:'lzl'}); } }
+  const actor = lstep>0 ? lstep-1 : -1;
+  P.nodes.forEach(([t,sub,l3],i)=>{
+    const g=lel('g',{class:'ln'+(l3?' l3':'')+(i===actor?' cur':'')});
+    lel('rect',{x:XN,y:nodeY[i],width:WN,height:NH,rx:8},g);
+    ltx(XN+WN/2,nodeY[i]+(C?20:22),t,{'text-anchor':'middle',class:'lnt'},g);
+    ltx(XN+WN/2,nodeY[i]+(C?37:40),sub,{'text-anchor':'middle',class:'lns'},g);
+  });
+  P.links.forEach((L,i)=>{
+    const k=i+1, y1=nodeY[i]+NH+4, y2=nodeY[i+1]-(C&&zoneStart.has(i+1)?ZH:0)-5;
+    lel('line',{x1:XA,y1,x2:XA,y2:y2-8,class:'la'+(L.serial?' ser':'')});
+    lel('polygon',{points:`${XA},${y2} ${XA-6},${y2-9} ${XA+6},${y2-9}`,class:'lah'+(L.serial?' ser':'')});
+    const h=cardH[i], top=linkY[i]+linkPad[i]+(linkH[i]-linkPad[i]-h)/2;
+    if(k>lstep){ lel('rect',{x:XC,y:top,width:WC,height:h,rx:8,class:'lcard fut'}); ltx(XC+WC/2,top+h/2+5,"?",{'text-anchor':'middle',class:'lq'}); return; }
+    if(!isOpen(k)){
+      lel('rect',{x:XC,y:top,width:WC,height:h,rx:8,class:'lcard ask'});
+      ltx(XC+WC/2,top+h/2+5,"À toi : que change ce lien ?",{'text-anchor':'middle',class:'lqa'});
+      if(!C) lel('line',{x1:XA+8,y1:top+h/2,x2:XC,y2:top+h/2,class:'lleader'});
+      return;
+    }
+    if(!C) lel('line',{x1:XA+8,y1:top+30,x2:XC,y2:top+30,class:'lleader'});
+    lel('rect',{x:XC,y:top,width:WC,height:h,rx:8,class:'lcard'+(k===lstep?' now':'')});
+    let ry0=top+15;
+    if(L.badge){
+      if(C){ ltx(XL,top+16,L.badge,{class:'lbadget'}); ry0+=18; }
+      else { const bg=lel('g',{class:'lbadge'}); lel('rect',{x:XN,y:top+19,width:96,height:22,rx:5},bg); ltx(XN+48,top+34,L.badge,{'text-anchor':'middle'},bg); }
+    }
+    [['mac','MAC',L.mac],['ip','IP',L.ip],['tag','Étiq.',L.tag]].forEach(([key,lab,val],r)=>{
+      const ry=ry0+15*r, g=lel('g',{class:'lrow'+(layer!=='all'&&layer!==key?' dim':'')});
+      if(L.chg.includes(key)) lel('circle',{cx:XC+(C?8:10),cy:ry,r:3.2,class:'ldot'},g);
+      ltx(XL,ry+4,lab,{class:'llab'},g);
+      if(key==='tag'&&val.startsWith('VLAN')){ lel('rect',{x:XV,y:ry-8,width:70,height:16,rx:4,class:'lchip'},g); ltx(XV+35,ry+4,val,{'text-anchor':'middle',class:'lchipt'},g); }
+      else ltx(XV,ry+4,val,{class:'lval'+(C?' sm':'')},g);
+    });
+    if(k===lstep){
+      let wy=ry0+57;
+      whyList(L).forEach(([f,t])=>{
+        wrapTxt(FL[f]+" : "+t,WRAP).forEach((line,li)=>{
+          const tt=lel('text',{x:XC+(C?10:14),y:wy,class:'lwhy'});
+          if(li===0){ const cut=line.indexOf(' : '); const b=document.createElementNS("http://www.w3.org/2000/svg",'tspan'); b.setAttribute('class','lwhyb'); b.textContent=line.slice(0,cut+2); tt.appendChild(b); tt.appendChild(document.createTextNode(line.slice(cut+2))); }
+          else tt.textContent=line;
+          wy+=15;
+        });
+      });
+    }
+  });
+}
+
+function natHTML(){
+  const Lc=lstep>0?LP().links[lstep-1]:null, pend=Lc&&lguess&&needGuess(Lc)&&!lanswers[lphase+':'+lstep];
+  const lstep_=lstep; { const lstep=pend?lstep_-1:lstep_; return natInner(lstep); }
+}
+function natInner(lstep){
+  const box=inner=>`<div class="nat"><h3>Table NAT du routeur Rouge</h3>${inner}</div>`;
+  if(lphase===0) return box(`<p class="note">Le NAT n'intervient pas ici : la requête ne quitte jamais le siège.</p>`);
+  const row=cls=>`<div class="natrow${cls}"><span class="nk">Intérieur</span><code>192.168.40.11:1025</code><span class="nk">correspond à</span><span class="nk">Extérieur</span><code>132.186.32.33:1025</code></div>`;
+  if(lphase===1){
+    if(lstep<3) return box(`<p class="note">Vide pour l'instant. Le routeur Rouge écrira une ligne au passage de la requête.</p>`);
+    if(lstep===3) return box(row(' new')+`<p class="note">Ligne écrite à l'instant. Le Rouge s'en servira pour reconnaître la réponse.</p>`);
+    return box(row(''));
+  }
+  if(lstep<4) return box(row('')+`<p class="note">La ligne écrite à l'aller attend la réponse.</p>`);
+  if(lstep===4) return box(row(' read')+`<p class="note">Ligne retrouvée grâce au port 1025 : le destinataire redevient 192.168.40.11.</p>`);
+  return box(row(''));
+}
+
+function loupeHTML(){
+  const P=LP(), N=P.links.length;
+  const lay=`<div class="layers" role="group" aria-label="Une notion à la fois"><span class="laylab">Une notion à la fois</span>${[['all','Tout'],['tag','Étiquette'],['ip','Adresses IP'],['mac','Adresses matérielles']].map(([k,t])=>`<button class="lay" data-lay="${k}" aria-pressed="${layer===k}">${t}</button>`).join('')}</div>`;
+  let body='';
+  if(lstep===0) body=`<p class="say">${P.lead}</p><p class="note">${P.note}</p><p class="kbd">Avance lien par lien avec « Étape suivante ». Active le mode devine pour répondre avant de voir chaque fiche.</p>`;
+  else{
+    const L=P.links[lstep-1], key=lphase+':'+lstep, ans=lanswers[key], pending=lguess&&needGuess(L)&&!ans;
+    body=`<h3 class="sub">${P.nodes[lstep-1][0]}, vers ${P.nodes[lstep][0]}</h3>`+(pending?`<p class="say hint2">Regarde l'équipement qui vient d'agir, et le câble qu'emprunte la trame. Ce qu'il fait te sera expliqué après ta réponse.</p>`:`<p class="say">${L.say}</p>`);
+    if(pending){
+      body+=`<div class="quiz"><h3>À toi : que change ce lien ?</h3><p class="hint">Compare avec la fiche du lien précédent. Si rien ne change, ne coche rien.</p>${['mac','ip','tag'].map(k=>`<label class="opt"><input type="checkbox" value="${k}"> ${FL[k]}</label>`).join('')}<button class="btn primary" id="lcheck">Vérifier ma réponse</button></div>`;
+    } else {
+      if(ans){ const good=new Set(L.chg), pick=new Set(ans.picked);
+        const miss=[...good].filter(k=>!pick.has(k)).map(k=>FL[k]), extra=[...pick].filter(k=>!good.has(k)).map(k=>FL[k]);
+        body+= ans.ok?`<p class="verdict ok">Exact.${good.size?'':' Rien ne change sur ce lien.'}</p>`
+          :`<p class="verdict ko">Pas tout à fait.${miss.length?` Tu as oublié : ${miss.join(', ')}.`:''}${extra.length?` En trop : ${extra.join(', ')}.`:''}</p><button class="btn" id="lretry">Réessayer ce lien</button>`; }
+      if(!L.created && L.chg.length===0) body+=`<p class="note">Rien ne change sur ce lien : la fiche est identique à la précédente.</p>`;
+      if(L.badge) body+=`<p class="pre"><b>${L.badge}.</b> ${L.badgeText}</p>`;
+      body+=`<p class="kbd">Le pourquoi de chaque changement est écrit sous la fiche, sur le schéma.</p>`;
+    }
+  }
+  const end= lstep===N ? `<div class="recap"><h3>Fin de la phase</h3><p class="say">${P.end}</p></div>` : '';
+  const go = P.trajet ? `<div class="goto"><button class="btn small" data-trajet="${P.trajet}">Revoir ce trajet sur la carte de ta maquette</button></div>` : '';
+  return `<p class="eyebrow">La trame à la loupe, phase ${lphase+1} sur 3</p><h2>${P.name}</h2><p class="clock">${lstep===0?'Avant le départ':`Lien ${lstep} sur ${N}`}</p>${lay}${body}${natHTML()}${end}${go}`;
+}
+
+function bindLoupe(){
+  document.querySelectorAll('[data-lay]').forEach(b=>b.addEventListener('click',()=>{ layer=b.dataset.lay; saveL(); render(); }));
+  const c=document.getElementById('lcheck');
+  if(c) c.addEventListener('click',()=>{ const L=LP().links[lstep-1];
+    const picked=[...document.querySelectorAll('.quiz input:checked')].map(i=>i.value), good=new Set(L.chg);
+    lanswers[lphase+':'+lstep]={picked, ok:picked.length===good.size&&picked.every(k=>good.has(k))}; render(); });
+  const r=document.getElementById('lretry');
+  if(r) r.addEventListener('click',()=>{ delete lanswers[lphase+':'+lstep]; render(); });
+  document.querySelectorAll('#side [data-trajet]').forEach(b=>b.addEventListener('click',()=>{
+    mode='trajets'; si=SCEN.findIndex(x=>x.id===b.dataset.trajet); step=0; buildRail(); render(); }));
+}
+
+const ltabs=document.getElementById('ltabs');
+LOUPE.forEach((P,i)=>{ const b=document.createElement('button'); b.className='tab'; b.textContent=P.tab;
+  b.addEventListener('click',()=>{ lphase=i; lstep=0; buildLoupeRail(); render(); }); ltabs.appendChild(b); });
+function buildLoupeRail(){
+  const rail=document.getElementById('rail'); rail.innerHTML='';
+  const w=document.createElement('div'); w.className='leg';
+  const l=document.createElement('span'); l.className='leg-name'; l.textContent='Liens'; w.appendChild(l);
+  for(let k=0;k<=LP().links.length;k++){ const b=document.createElement('button'); b.className='dot'; b.dataset.lstep=k;
+    b.textContent=k===0?'0':String(k); b.setAttribute('aria-label',k===0?'Départ':`Lien ${k}`);
+    b.addEventListener('click',()=>{ lstep=k; render(); }); w.appendChild(b); }
+  rail.appendChild(w);
+}
+function buildCurrentRail(){ if(mode==='sout') buildSoutRail(); else if(mode==='loupe') buildLoupeRail(); else buildRail(); }
+function loupeGo(n){
+  const N=LP().links.length;
+  if(n>N){ if(lphase<LOUPE.length-1){ lphase++; lstep=0; buildLoupeRail(); } else lstep=N; }
+  else if(n<0){ if(lphase>0){ lphase--; lstep=LP().links.length; buildLoupeRail(); } else lstep=0; }
+  else lstep=n;
+  render();
+}
+function renderLoupe(){
+  document.querySelectorAll('#ltabs .tab').forEach((b,i)=>b.setAttribute('aria-pressed',i===lphase?'true':'false'));
+  const tb=document.getElementById('train'); tb.setAttribute('aria-pressed',lguess?'true':'false'); tb.textContent=lguess?'Mode devine activé':'Mode devine';
+  renderLoupeSvg();
+  document.querySelectorAll('#rail .dot').forEach(b=>{ const n=+b.dataset.lstep; b.removeAttribute('aria-current'); if(n===lstep) b.setAttribute('aria-current','step'); b.classList.toggle('done',n<lstep); });
+  const N=LP().links.length, pv=document.getElementById('prev'), nx=document.getElementById('next');
+  pv.disabled = lphase===0 && lstep===0; pv.textContent='Étape précédente';
+  nx.disabled = lphase===LOUPE.length-1 && lstep===N;
+  nx.textContent = lstep===0 ? 'Commencer la phase' : (lstep===N ? 'Phase suivante' : 'Étape suivante');
+  document.getElementById('side').innerHTML=loupeHTML(); bindLoupe(); saveL();
+  const box=document.querySelector('.map'), cur=loupeSvg.querySelector('.lcard.now, .lcard.ask');
+  if(cur){ const br=cur.getBoundingClientRect(), bx=box.getBoundingClientRect();
+    if(br.top<bx.top || br.bottom>bx.bottom) box.scrollTop += (br.top-bx.top) - (box.clientHeight-br.height)/2; }
+  else if(lstep===0) box.scrollTop=0;
+}
+document.getElementById('side').addEventListener('click',e=>{ const b=e.target.closest('[data-loupe]'); if(!b) return;
+  mode='loupe'; lphase=+b.dataset.loupe; lstep=0; buildLoupeRail(); render(); });
+['vlan','internet','web'].forEach((id,i)=>{ const c=SOUT.find(x=>x.id===id); if(c) c.loupe=[0,1,1][i]; });
+QUIZ.forEach((_,i)=>{ if(!qorder.includes(i) && !(i in qstate)) qorder.push(i); });
+
+window.addEventListener('resize',()=>{ if(mode==='loupe') renderLoupeSvg(); });
+buildCurrentRail(); render();
+
+</script>
+</body>
+</html>
