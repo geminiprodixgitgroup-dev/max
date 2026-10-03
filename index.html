@@ -607,7 +607,8 @@ impactinfluence6.com</code></pre></div>
           <ul class="dash" style="margin-top:6px">
             <li>la clé SSH doit faire au moins 2048 bits, et non 1024 ;</li>
             <li>le filtrage du VLAN 99 se place sur le switch de cœur, qui route entre les VLAN, ou sur les lignes d'administration de chaque équipement. Pas sur le routeur ;</li>
-            <li>le VLAN 99 devra aussi être déclaré sur les deux distributions.</li>
+            <li>le VLAN 99 devra aussi être déclaré sur les deux distributions ;</li>
+            <li>le document parle de « Compta » : le service s'appelle Finance.</li>
           </ul></div>
       </div>
     </article>
@@ -1013,8 +1014,9 @@ ping 2001:0:CAFE:90::80</code></pre></div>
       <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">IPv6 chapitre 9, dossier 2.8</span></div></div></details>
 
     <details class="qa" data-q="services"><summary><span class="qa-q">Quels services tournent sur vos serveurs ?</span><span class="st"></span></summary><div class="qa-a">
-      <p class="say">J'ai constaté que mes deux serveurs ont aussi les services FTP, TFTP et Syslog activés par défaut. Ils ne servent à rien dans mon architecture. Les désactiver relève du principe de réduction de la surface d'attaque : un serveur ne doit faire tourner que les services nécessaires à sa fonction, parce que chaque service en écoute est un point d'entrée potentiel.</p>
-      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 17</span></div></div></details>
+      <p class="say">J'ai constaté que mes deux serveurs ont aussi les services FTP, TFTP et Syslog activés par défaut, et un service web tourne sur le serveur DNS. Ils ne servent à rien dans mon architecture. Les désactiver relève du principe de réduction de la surface d'attaque : un serveur ne doit faire tourner que les services nécessaires à sa fonction, parce que chaque service en écoute est un point d'entrée potentiel.</p>
+      <p class="note">Si l'évaluateur tape 192.168.100.10 dans un navigateur, une page web s'affiche : c'est ce service HTTP par défaut. Ne te laisse pas déstabiliser.</p>
+      <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 17 ; guide des 19 équipements</span></div></div></details>
   </div>
 
   <div class="qgroup"><h3>IPv6</h3>
@@ -1064,7 +1066,8 @@ ping 2001:0:CAFE:90::80</code></pre></div>
       <p class="say">Trois mesures, trois portes d'entrée. Le réseau avec le chiffrement : SSHv2 contre le vol d'identifiants. L'infrastructure avec le VLAN d'administration : contre la latéralisation d'une attaque. Le physique avec le Port Security : contre l'intrusion physique. Ces trois mesures ne coûtent aucun matériel supplémentaire, ce sont uniquement des durcissements de configuration.</p>
       <p class="note"><span class="lbl trap">Piège</span>Toujours le risque avant la mesure. Ne les récite pas, montre-les : DISTRI-GAUCHE pour la deuxième, SW-SHOWROOM pour la troisième.</p>
       <p class="note"><b>D'où viennent-elles ?</b> Du Guide d'hygiène informatique de l'ANSSI : mesure 21 pour les protocoles sécurisés, mesure 28 pour le réseau d'administration dédié, mesure 26 pour restreindre les prises réseau des zones ouvertes au public.</p>
-      <p class="note"><b>Pourquoi filtrer le VLAN 99 sur le cœur et pas sur le routeur ?</b> Parce que le trafic entre VLAN ne passe jamais par le routeur : c'est le switch de cœur qui le route.</p>
+      <p class="note"><b>Pourquoi filtrer le VLAN 99 sur le cœur et pas sur le routeur ?</b> Parce que le trafic entre VLAN ne passe jamais par le routeur : c'est le switch de cœur qui le route. Le plus solide : limiter l'administration sur chaque équipement (<code>access-class</code> sur les lignes vty).</p>
+      <p class="note"><b>Deux compléments.</b> La salle de réunion mérite aussi le Port Security : des visiteurs y sont laissés seuls. Et il faut forcer les ports en <code>switchport mode access</code>, comme sur SW-COM, pour empêcher un équipement branché de négocier un trunk (le saut de VLAN). Les commandes sont dans l'onglet Maquette.</p>
       <div class="rate"><button type="button" data-rate="su">Je sais</button><button type="button" data-rate="revoir">À revoir</button><span class="src">Cours définitif, partie 18</span></div></div></details>
 
     <details class="qa" data-q="defauts"><summary><span class="qa-q">Qu'est-ce qui ne va pas dans votre réseau ?</span><span class="st"></span></summary><div class="qa-a">
@@ -1235,6 +1238,7 @@ ping 2001:0:CAFE:90::80</code></pre></div>
     <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Un ping du Bleu vers le serveur DNS qui réussit montre que je filtre le port 53 et pas l'hôte.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>La réponse du serveur serait elle-même traduite par le NAT en quittant le siège : le résultat ne prouve rien sur la liste. La preuve, c'est le compteur de la ligne <code>deny</code> dans <code>show access-lists</code>.</p></div></div>
     <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le VLAN 99 n'existe pas.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Il existe sur le Core et s'appelle MANAGEMENT : la base VLAN est dans <code>vlan.dat</code>, pas dans la running-config. Il n'est pas encore déclaré sur les distributions. Vérifie avec <code>show vlan brief</code>.</p></div></div>
     <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>J'ai forcé le Core comme racine du Spanning Tree avec une priorité de 4096.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Aucune commande de priorité dans la configuration. La racine est élue automatiquement ; la forcer serait l'amélioration naturelle.</p></div></div>
+    <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>En IPv6, le switch de cœur annonce lui-même ses réseaux dans OSPF.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Ses interfaces virtuelles ont <code>ipv6 ospf 1 area 0</code>, mais pas son port vers le routeur : aucun voisin. Ce sont les six routes statiques IPv6 du Rouge, redistribuées, qui propagent les réseaux du siège, comme en IPv4.</p></div></div>
     <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le router-id 1.1.1.1 identifie le Rouge dans OSPF.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>1.1.1.1, 2.2.2.2 et 3.3.3.3 sont dans le processus IPv6 uniquement. En IPv4, l'identifiant a été élu sur la plus haute adresse : 192.168.99.1 pour le Rouge.</p></div></div>
     <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le DHCP est sur le routeur Core.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>C'est un switch de cœur, un commutateur multicouche. C'est <code>ip routing</code> qui lui donne sa capacité de routage.</p></div></div>
     <div class="lie"><div class="wrong"><span class="lbl bad">Faux</span><q>Le /30 sert à sécuriser les liaisons.</q></div><div class="right"><span class="lbl ok">Vrai</span><p>Il sert uniquement à ne pas gaspiller d'adresses sur une liaison qui ne relie que deux équipements.</p></div></div>
@@ -1253,6 +1257,8 @@ ping 2001:0:CAFE:90::80</code></pre></div>
         <tr><td>Script de soutenance</td><td>Démo 4 : « je prouve que le filtrage laisse passer ». Corrigé dans l'onglet Chrono.</td></tr>
         <tr><td>Checklist d'origine</td><td>« Aucun NAT sur le trajet du serveur web ». Corrigé dans l'onglet Checklist.</td></tr>
         <tr><td>Vérification de la maquette</td><td>« Le VLAN 99 n'existe pas » : corrigé par la vérification du guide des 19 équipements.</td></tr>
+        <tr><td>Guide des 19 équipements</td><td>Fiche 4 : « le Core annonce lui-même les réseaux IPv6 » et « VLAN 99 sans nom ». Fiche 10 : le test Finance → Informatique. Fiche 18 : « sans nécessiter de NAT ». Le reste est vérifié.</td></tr>
+        <tr><td>Cours ciblé, Théorie de la soutenance, Les derniers points, L'essentiel v3</td><td>« Aucun NAT sur le trajet du serveur web », « tester depuis un poste métier prouve le filtrage », « depuis la Finance, le test WAN échouerait ». Les derniers points disent aussi que le cœur annonce ses réseaux IPv6 : faux.</td></tr>
         <tr><td>Cours définitif</td><td>POOL-GENERAL présenté comme un pool de repli : la page Trajet, plus récente, dit qu'il ne sert à rien et que tu le supprimerais. Pour le DHCP, l'argument « il aurait fallu des relais » est remplacé par « une adresse par VLAN sur chaque distribution et deux serveurs à coordonner ».</td></tr>
         <tr><td>Document de préconisations</td><td>Clé SSH de 1024 bits (il en faut au moins 2048) ; filtrage du VLAN 99 placé sur le routeur (il se place sur le cœur).</td></tr>
         <tr><td>Dossier de justification FINAL</td><td>« VLAN 99 sans nom » (il s'appelle MANAGEMENT). Partie 0.4 : le test DNS depuis le Bleu n'était pas valide, à refaire après correction des postes.</td></tr>
@@ -1427,7 +1433,24 @@ ipv6 route 2001:0:CAFE:40::/64 2001:0:CAFE:F::2
 ipv6 route 2001:0:CAFE:50::/64 2001:0:CAFE:F::2
 ipv6 route 2001:0:CAFE:100::/64 2001:0:CAFE:F::2</code></pre></div>
     </div>
+    <div>
+      <p class="cap">Préconisations : les commandes, si le jury les demande (non configurées)</p>
+      <div class="term"><div class="term-h"><span class="b b-bleu">Bleu</span><span class="dev">SW-SHOWROOM</span><span class="where">Port Security, port par port</span></div><pre><code>interface range FastEthernet0/1 - 24
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 1
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown</code></pre></div>
+    </div>
+    <div>
+      <p class="cap">Limiter l'administration au VLAN Informatique, sur chaque équipement</p>
+      <div class="term"><div class="term-h"><span class="dev">Chaque équipement</span><span class="where">avec SSH en place</span></div><pre><code>access-list 10 permit 192.168.10.0 0.0.0.255
+line vty 0 4
+ access-class 10 in
+ transport input ssh</code></pre></div>
+    </div>
   </div>
+  <p class="small mt" style="max-width:var(--measure)">Ces lignes ne sont pas dans ta maquette : ce sont des améliorations. Ne prétends jamais les avoir mises en œuvre. <code>show port-security</code> sur SW-SHOWROOM affiche aujourd'hui une liste vide, et c'est justement l'illustration du risque.</p>
 </section>
 
 <!-- =================================================================== DOCUMENTS -->
@@ -1440,25 +1463,25 @@ ipv6 route 2001:0:CAFE:100::/64 2001:0:CAFE:F::2</code></pre></div>
   <div class="docs">
     <div class="doc"><div><h4>Le trajet de la trame, page interactive <span class="tag cur">le plus récent</span></h4><p>Trois modes : les trajets pas à pas, la soutenance partie par partie avec questions et écarts, la trame à la loupe. C'est la version la plus à jour de ta préparation.</p></div><div class="links"><span class="pages">html</span><a href="trajet.html">ouvrir</a></div></div>
     <div class="doc"><div><h4>Le cours définitif <span class="tag cur">référence</span></h4><p>Dix-neuf parties vérifiées sur la maquette. Pour chacune : la question du jury, le mécanisme, la preuve, la réponse à dire, le piège.</p></div><div class="links"><span class="pages">54 p.</span><a href="documents/Cours_DEFINITIF_Impact_Influence.pdf">clair</a><a href="documents/Cours_DEFINITIF_MODE_SOMBRE.pdf">sombre</a></div></div>
-    <div class="doc"><div><h4>Les 19 équipements de la maquette</h4><p>Une fiche par équipement : rôle, configuration exacte, logique de chaque commande, vérifications, phrase au jury.</p></div><div class="links"><span class="pages">50 p.</span><a href="documents/Guide_19_equipements_Impact_Influence.pdf">ouvrir</a></div></div>
+    <div class="doc"><div><h4>Les 19 équipements de la maquette</h4><p>Une fiche par équipement : rôle, configuration exacte, logique de chaque commande, vérifications, phrase au jury. Trois passages sont dépassés, voir l'onglet Pièges.</p></div><div class="links"><span class="pages">50 p.</span><a href="documents/Guide_19_equipements_Impact_Influence.pdf">ouvrir</a></div></div>
     <div class="doc"><div><h4>Vérification du guide des 19 équipements <span class="tag cur">dernier rapport</span></h4><p>Corrige le rapport précédent : le VLAN 99 existe et s'appelle MANAGEMENT.</p></div><div class="links"><span class="pages">md</span><a href="documents/verification_guide19.md">ouvrir</a></div></div>
     <div class="doc"><div><h4>Le trajet complet, PC Finance → serveur web</h4><p>Aller et retour, équipement par équipement : adresses, étiquettes, routes, listes et NAT.</p></div><div class="links"><span class="pages">9 p.</span><a href="documents/Trajet_complet_PC_Finance_serveur_web.pdf">clair</a><a href="documents/Trajet_complet_PC_Finance_serveur_web_MODE_SOMBRE.pdf">sombre</a></div></div>
   </div>
 
   <h3>La théorie</h3>
   <div class="docs">
-    <div class="doc"><div><h4>La théorie de la soutenance</h4><p>Vingt-et-une notions, organisées par la question du jury qui les déclenche. L'édition sombre ajoute une image mentale par notion.</p></div><div class="links"><span class="pages">44 p.</span><a href="documents/Theorie_soutenance_Impact_Influence.pdf">clair</a><a href="documents/Theorie_soutenance_MODE_SOMBRE.pdf">sombre</a></div></div>
-    <div class="doc"><div><h4>La théorie ciblée</h4><p>Quinze chapitres, seulement ce qu'il faut comprendre pour valider.</p></div><div class="links"><span class="pages">35 p.</span><a href="documents/Theorie_ciblee_Impact_Influence.pdf">clair</a><a href="documents/Theorie_ciblee_Impact_Influence_MODE_SOMBRE.pdf">sombre</a></div></div>
-    <div class="doc"><div><h4>Cours ciblé sur tes lacunes</h4><p>Onze parties dans l'ordre de tes priorités. La partie 0 corrige huit affirmations fausses d'un cours précédent.</p></div><div class="links"><span class="pages">29 p.</span><a href="documents/Cours_corrige_lacunes.pdf">clair</a><a href="documents/Cours_corrige_lacunes_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>La théorie de la soutenance</h4><p>Vingt-et-une notions, organisées par la question du jury qui les déclenche. La partie 9 (« aucun NAT ») est dépassée.</p></div><div class="links"><span class="pages">44 p.</span><a href="documents/Theorie_soutenance_Impact_Influence.pdf">clair</a><a href="documents/Theorie_soutenance_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>La théorie ciblée</h4><p>Quinze chapitres, seulement ce qu'il faut comprendre pour valider. Récente : NAT sur le trajet web, mesures de l'ANSSI, corrections du document de préconisations.</p></div><div class="links"><span class="pages">35 p.</span><a href="documents/Theorie_ciblee_Impact_Influence.pdf">clair</a><a href="documents/Theorie_ciblee_Impact_Influence_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>Cours ciblé sur tes lacunes <span class="tag old">ancien</span></h4><p>Onze parties dans l'ordre de tes priorités. La partie 0 reste utile (huit erreurs à ne pas emporter) ; les parties 7 et 8 sont dépassées sur le NAT et le filtrage.</p></div><div class="links"><span class="pages">29 p.</span><a href="documents/Cours_corrige_lacunes.pdf">clair</a><a href="documents/Cours_corrige_lacunes_MODE_SOMBRE.pdf">sombre</a></div></div>
     <div class="doc"><div><h4>IPv6 pour débutant</h4><p>Neuf chapitres à partir de zéro, sur les adresses de ta maquette. Le chapitre 9 rassemble les questions techniques du jury.</p></div><div class="links"><span class="pages">39 p.</span><a href="documents/Cours_IPv6_debutant.pdf">clair</a><a href="documents/Cours_IPv6_debutant_MODE_SOMBRE.pdf">sombre</a></div></div>
   </div>
 
   <h3>À écouter (synthèse vocale)</h3>
   <div class="docs">
     <div class="doc"><div><h4>Le cours définitif, version audio</h4><p>Le même cours en prose, sans tableau ni symbole.</p></div><div class="links"><span class="pages">62 p.</span><a href="documents/Cours_DEFINITIF_AUDIO.pdf">clair</a><a href="documents/Cours_DEFINITIF_AUDIO_MODE_SOMBRE.pdf">sombre</a></div></div>
-    <div class="doc"><div><h4>Les derniers points</h4><p>Les onze notions que tu avais identifiées comme encore floues.</p></div><div class="links"><span class="pages">42 p.</span><a href="documents/Cours_audio_derniers_points.pdf">clair</a><a href="documents/Cours_audio_derniers_points_MODE_SOMBRE.pdf">sombre</a></div></div>
+    <div class="doc"><div><h4>Les derniers points <span class="tag old">ancien</span></h4><p>Les onze notions que tu avais identifiées comme encore floues. Parties 6 et 13 dépassées (IPv6 du cœur, NAT sur le trajet web).</p></div><div class="links"><span class="pages">42 p.</span><a href="documents/Cours_audio_derniers_points.pdf">clair</a><a href="documents/Cours_audio_derniers_points_MODE_SOMBRE.pdf">sombre</a></div></div>
     <div class="doc"><div><h4>La théorie ciblée, version audio</h4><p>Les quinze chapitres de la théorie ciblée, en prose.</p></div><div class="links"><span class="pages">37 p.</span><a href="documents/Theorie_ciblee_AUDIO.pdf">clair</a><a href="documents/Theorie_ciblee_AUDIO_MODE_SOMBRE.pdf">sombre</a></div></div>
-    <div class="doc"><div><h4>L'essentiel à retenir, v3</h4><p>La distillation des dix-neuf fiches équipement, en audio.</p></div><div class="links"><span class="pages">33 p.</span><a href="documents/Essentiel_audio_Impact_Influence_v3.pdf">ouvrir</a></div></div>
+    <div class="doc"><div><h4>L'essentiel à retenir, v3 <span class="tag old">ancien</span></h4><p>La distillation des dix-neuf fiches équipement, en audio. Les preuves 2 et 3 de la partie 15 donnent l'ancienne raison du choix des postes.</p></div><div class="links"><span class="pages">33 p.</span><a href="documents/Essentiel_audio_Impact_Influence_v3.pdf">ouvrir</a></div></div>
     <div class="doc"><div><h4>Guide de soutenance, version audio <span class="tag old">ancien</span></h4><p>Sept parties. Contient l'ancien test Finance → Informatique, à ne plus faire.</p></div><div class="links"><span class="pages">16 p.</span><a href="documents/Guide_soutenance_Impact_Influence_speechify.pdf">ouvrir</a></div></div>
   </div>
 
