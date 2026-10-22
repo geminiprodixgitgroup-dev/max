@@ -8,7 +8,7 @@ Aucune installation : ouvre `index.html` dans un navigateur.
 
 1. **La méthode** : « Sept règles, quatre questions ».
 2. **La construction** : « Quinze problèmes, quinze solutions ».
-3. **Le film** : « La Finance, du démarrage à la page web », en IPv4 puis en IPv6. Un paquet animé parcourt le schéma, et les tables NAT se remplissent au fil du trajet.
+3. **Le film** : « La Finance, du démarrage à la page web », en IPv4 puis en IPv6. Un paquet animé parcourt le schéma, étape par étape, avec les opérations de chaque routeur dans leur ordre exact.
 4. **La double panne** : « DISTRI-GAUCHE éteinte, liaison Rouge–Vert coupée ».
 5. **Les données** : « Adressage, liaisons, routes, listes, NAT », avec un outil sur les préfixes.
 6. **Les commandes** : « Équipement par équipement, chaque mot justifié », avec un outil qui fait juger un paquet par les listes.
@@ -19,11 +19,11 @@ Aucune installation : ouvre `index.html` dans un navigateur.
 
 ## Ce qui est enregistré
 
-La page garde, dans le navigateur (`localStorage`, clés `ess:*`), l’onglet ouvert, le trajet et l’étape en cours, le mode devine, l’équipement affiché, les cases « à vérifier » et les réponses du test du retrait. Rien n’est partagé entre deux appareils.
+La page garde, dans le navigateur (`localStorage`, clés `ess:*`), l’onglet ouvert, l’étape de la construction, le trajet et l’étape en cours, le mode devine, l’équipement affiché, les cases « à vérifier » et les réponses du test du retrait. Rien n’est partagé entre deux appareils.
 
 ## Historique
 
-Ce dépôt contenait un site de révision en huit onglets (`index.html`) et une page de trajet (`trajet.html`), bâtis sur l’ancienne version de la maquette. Ils contredisaient « L’essentiel à travailler » sur des points centraux : le NAT statique, présenté comme retiré ; les listes 120, présentées comme non appliquées ; le DHCP, placé sur le cœur ; l’adresse IPv6 du serveur web. Ils ont été remplacés par la page actuelle, et l’historique Git les conserve.
+Ce dépôt contenait un site de révision en huit onglets (`index.html`) et une page de trajet (`trajet.html`), bâtis sur l’ancienne version de la maquette. Ils contredisaient « L’essentiel à travailler » sur des points centraux : le NAT statique, présenté comme retiré ; les listes du cœur, présentées comme non actives ; le DHCP, placé sur le cœur ; l’adresse IPv6 du serveur web. Ils ont été remplacés par la page actuelle, et l’historique Git les conserve.
 
 ## Documents originaux
 
