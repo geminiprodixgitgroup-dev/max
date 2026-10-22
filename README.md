@@ -1,33 +1,30 @@
 # Soutenance Impact Influence
 
-Site de révision pour la soutenance du projet *Impact Influence* (titre professionnel, « Configurez des services réseaux et des équipements d'interconnexion »). Maquette Packet Tracer : trois bâtiments, 26 équipements, IPv4 et IPv6.
+*L’essentiel interactif* : une page de révision pour la soutenance du projet *Impact Influence* (titre professionnel, « Configurez des services réseaux et des équipements d'interconnexion »). Elle suit le document « L’essentiel à travailler », dans l’ordre de ses dix parties, en reprenant ses textes mot pour mot.
 
 Aucune installation : ouvre `index.html` dans un navigateur.
 
-## Contenu
+## Les dix onglets
 
-| Fichier | Rôle |
-|---|---|
-| `index.html` | Le site de révision, en huit onglets |
-| `trajet.html` | Le trajet de la trame, interactif : trajets pas à pas, soutenance partie par partie, trame à la loupe |
+1. **La méthode** : « Sept règles, quatre questions ».
+2. **La construction** : « Quinze problèmes, quinze solutions ».
+3. **Le film** : « La Finance, du démarrage à la page web », en IPv4 puis en IPv6. Un paquet animé parcourt le schéma, et les tables NAT se remplissent au fil du trajet.
+4. **La double panne** : « DISTRI-GAUCHE éteinte, liaison Rouge–Vert coupée ».
+5. **Les données** : « Adressage, liaisons, routes, listes, NAT », avec un outil sur les préfixes.
+6. **Les commandes** : « Équipement par équipement, chaque mot justifié », avec un outil qui fait juger un paquet par les listes.
+7. **Les autres trajets** : « Les autres clients, les refus, les pannes ».
+8. **Les pièges** : « Chaque piège, rangé sous sa règle ».
+9. **Tes preuves** : « Ce que tu as testé, et ce qu’il reste à vérifier ».
+10. **L’entraînement** : « Le retrait, les réflexes, le récit, la frise ».
 
-Les onglets de `index.html` :
+## Ce qui est enregistré
 
-- **Jour J** : format des 30 minutes, priorités par niveau, listes « la veille » et « dix minutes avant », kit de survie.
-- **Chrono** : le script des 15 minutes avec un chronomètre de répétition. Il surligne le passage en cours, fait défiler le texte et signale la fourchette de 10 à 20 minutes.
-- **Démos** : les six démonstrations du cahier des charges (commandes à copier, écran attendu, phrase à dire) et les tests que le jury peut improviser.
-- **Jury** : les écarts au cahier des charges, puis 54 questions-réponses à réviser, chacune marquée « Je sais » ou « À revoir », avec un tirage au hasard.
-- **Checklist** : la checklist de soutenance, avec une barre de progression.
-- **Pièges** : les gestes interdits, les phrases fausses et leur correction, les documents dépassés.
-- **Maquette** : adressage, interfaces, VLAN, serveurs, postes et configurations clés.
-- **Documents** : l'index des supports de cours, du plus récent au plus ancien.
+La page garde, dans le navigateur (`localStorage`, clés `ess:*`), l’onglet ouvert, le trajet et l’étape en cours, le mode devine, l’équipement affiché, les cases « à vérifier » et les réponses du test du retrait. Rien n’est partagé entre deux appareils.
 
-Les cases cochées et les notes des questions sont enregistrées dans le navigateur (`localStorage`), sur l'appareil utilisé.
+## Historique
 
-## Sources
-
-Le contenu suit les versions les plus récentes des supports : le mode Soutenance de `trajet.html`, le *Cours définitif* et le dernier rapport de vérification (guide des 19 équipements). Les affirmations dépassées des anciens documents sont corrigées dans le site et listées dans l'onglet **Pièges**.
+Ce dépôt contenait un site de révision en huit onglets (`index.html`) et une page de trajet (`trajet.html`), bâtis sur l’ancienne version de la maquette. Ils contredisaient « L’essentiel à travailler » sur des points centraux : le NAT statique, présenté comme retiré ; les listes 120, présentées comme non appliquées ; le DHCP, placé sur le cœur ; l’adresse IPv6 du serveur web. Ils ont été remplacés par la page actuelle, et l’historique Git les conserve.
 
 ## Documents originaux
 
-Ce dépôt est public : les supports originaux (PDF, notes, prompteur, livrable) n'y sont pas versionnés. Pour activer les liens de l'onglet **Documents** en local, copie le contenu de l'archive dans un dossier `documents/` à côté de `index.html`. Ce dossier est ignoré par Git.
+Ce dépôt est public : le document « L’essentiel à travailler » et les autres supports originaux (PDF, notes, maquette, livrables) n’y sont pas versionnés. Le fichier `.gitignore` les tient à l’écart.
